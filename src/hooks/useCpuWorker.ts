@@ -14,7 +14,7 @@ export type CpuResponse = {
 } | null;
 
 export function useCpuWorker() {
-  const workerRef = useRef<Worker>();
+  const workerRef = useRef<Worker | null>(null);
 
   const createWorker = () => {
     if (!workerRef.current) {

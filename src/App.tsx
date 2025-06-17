@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Board from './components/Board';
 import './style.css';
-import { getFlips, getValidMoves, countStones } from './logic/game';
+import { getValidMoves, countStones } from './logic/game';
 import { AI_CONFIG, TIMING_CONFIG } from './ai/config';
 import { useCpuWorker } from './hooks/useCpuWorker';
 import type { Cell } from './types';
@@ -19,9 +19,9 @@ function App() {
   };
 
   const { calculateMove } = useCpuWorker();
-
   const [mode, setMode] = useState<Mode>('title');
-  const [cpuLevel, setCpuLevel] = useState<number>(3);
+  // const [cpuLevel, setCpuLevel] = useState<number>(1);
+  const [cpuLevel, setCpuLevel] = useState<keyof typeof AI_CONFIG>(1);
   const [playerColor, setPlayerColor] = useState<'black' | 'white' | 'random'>('black');
   const [actualPlayerColor, setActualPlayerColor] = useState<1 | 2>(1);
   const [board, setBoard] = useState<Cell[][]>(createInitialBoard);
@@ -30,15 +30,12 @@ function App() {
   const [gameOver, setGameOver] = useState(false);
   const [message, setMessage] = useState('');
   const [cpuThinking, setCpuThinking] = useState(false);
-
   const randomRef = useRef<boolean>(false);
 
   const resolvePlayerColor = () => {
-    if (playerColor === 'random') {
-      return Math.random() < 0.5 ? 1 : 2;
-    } else {
-      return playerColor === 'black' ? 1 : 2;
-    }
+    return playerColor === 'random'
+      ? (Math.random() < 0.5 ? 1 : 2)
+      : (playerColor === 'black' ? 1 : 2);
   };
 
   useEffect(() => {
@@ -46,12 +43,10 @@ function App() {
       const resolved = resolvePlayerColor();
       setActualPlayerColor(resolved);
       randomRef.current = playerColor === 'random';
-
-      const firstTurn = 1;
       setBoard(createInitialBoard());
-      setTurn(firstTurn);
+      setTurn(1);
       setGameOver(false);
-      setMessage(firstTurn === 1 ? '黒の番です' : '白の番です');
+      setMessage('黒の番です');
     } else if (mode === 'pvp') {
       setBoard(createInitialBoard());
       setTurn(1);
@@ -62,14 +57,12 @@ function App() {
 
   useEffect(() => {
     if ((mode !== 'pvp' && mode !== 'cpu') || gameOver) return;
-
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) {
       const opponentMoves = getValidMoves(3 - turn as 1 | 2, board);
       if (opponentMoves.length === 0) {
         const { black, white } = countStones(board);
-        setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ` +
-          (black === white ? "引き分け" : (black > white ? "黒の勝ち！" : "白の勝ち！")));
+        setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ${black === white ? "引き分け" : black > white ? "黒の勝ち！" : "白の勝ち！"}`);
         setGameOver(true);
         setValidMoves([]);
       } else {
@@ -86,14 +79,12 @@ function App() {
 
   useEffect(() => {
     if (mode !== 'cpu' || gameOver || turn !== (3 - actualPlayerColor) || cpuThinking) return;
-
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) {
       const opponentMoves = getValidMoves(3 - turn as 1 | 2, board);
       if (opponentMoves.length === 0) {
         const { black, white } = countStones(board);
-        setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ` +
-          (black === white ? "引き分け" : (black > white ? "黒の勝ち！" : "白の勝ち！")));
+        setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ${black === white ? "引き分け" : black > white ? "黒の勝ち！" : "白の勝ち！"}`);
         setGameOver(true);
         setValidMoves([]);
       } else {
@@ -126,11 +117,9 @@ function App() {
       const moves = getValidMoves(turn, board);
       const move = moves.find(m => m.x === x && m.y === y);
       if (!move) return;
-
       const newBoard = board.map(row => [...row]);
       newBoard[y][x] = turn;
       move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
-
       setBoard(newBoard);
       setTurn(3 - turn as 1 | 2);
     }
@@ -171,12 +160,12 @@ function App() {
             CPUレベル：
             <select
               value={cpuLevel}
-              onChange={(e) => setCpuLevel(parseInt(e.target.value))}
+              onChange={(e) => setCpuLevel(Number(e.target.value))}
               style={{ marginLeft: 8 }}
             >
               {Object.entries(AI_CONFIG).map(([key, cfg]) =>
                 cfg.visible ? (
-                  <option key={key} value={key}>
+                  <option key={key} value={Number(key)}>
                     {cfg.name}
                   </option>
                 ) : null
@@ -184,7 +173,7 @@ function App() {
             </select>
           </label>
           <div style={{ fontSize: '0.9em', color: '#666', marginTop: 4 }}>
-            {AI_CONFIG[String(cpuLevel)]?.comment}
+            {AI_CONFIG[cpuLevel]?.comment}
           </div>
           <div style={{ marginTop: 16 }}>
             <label>
@@ -212,7 +201,7 @@ function App() {
   return (
     <div>
       <h1>オセロ</h1>
-      <p style={{ fontWeight: 'bold' }}>{mode === 'cpu' ? `VS CPU（${AI_CONFIG[String(cpuLevel)]?.name}）` : '2人対戦'}</p>
+      <p style={{ fontWeight: 'bold' }}>{mode === 'cpu' ? `VS CPU（${AI_CONFIG[cpuLevel]?.name}）` : '2人対戦'}</p>
       <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
       <p>{message}</p>
       <button onClick={() => setMode('title')}>タイトルに戻る</button>

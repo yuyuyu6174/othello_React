@@ -1,15 +1,14 @@
 import { AI_CONFIG, WHITE, BLACK } from './config';
 import { getAllValidMoves, simulateMove } from '../logic/game';
-import {
-  evaluateBoard,
-  evaluateStrategicBoard,
-  evaluateStrategicAdvancedBoard
-} from './evaluators';
 
 // transposition table (for minimax)
 const transpositionTable = new Map<string, number>();
 
-export function cpuMove(board: number[][], turn: 1 | 2, level: number): { x: number; y: number; flips: [number, number][] } | null {
+export function cpuMove(
+  board: number[][],
+  turn: 1 | 2,
+  level: number
+): { x: number; y: number; flips: [number, number][] } | null {
   const config = AI_CONFIG[level] || AI_CONFIG[1];
   const evalFunc = (b: number[][]) => config.evaluator(b, turn, config);
   const emptyCount = board.flat().filter(c => c === 0).length;
@@ -30,10 +29,7 @@ export function cpuMove(board: number[][], turn: 1 | 2, level: number): { x: num
     return getBestMoveIterative(board, turn, config.timeLimit || 1000, evalFunc, config);
   }
 
-  if (config.type === 'mcts') {
-    return getBestMoveMCTS(board, turn, config);
-  }
-
+  // 未実装
   return null;
 }
 
@@ -175,14 +171,19 @@ function getBestMoveFullSearch(board: number[][], color: 1 | 2, config: any) {
   return bestMove;
 }
 
-function fullSearch(board: number[][], color: 1 | 2, config: any, passed: boolean): number {
+function fullSearch(
+  board: number[][],
+  color: 1 | 2,
+  config: any,
+  _passed: boolean // unused, but needed for compatibility
+): number {
   const moves = getAllValidMoves(color, board);
   if (moves.length === 0) {
     const opponentMoves = getAllValidMoves(3 - color as 1 | 2, board);
     if (opponentMoves.length === 0) {
       const black = board.flat().filter(c => c === BLACK).length;
       const white = board.flat().filter(c => c === WHITE).length;
-      return (color === BLACK ? black - white : white - black);
+      return color === BLACK ? black - white : white - black;
     } else {
       return -fullSearch(board, 3 - color as 1 | 2, config, true);
     }
@@ -193,16 +194,14 @@ function fullSearch(board: number[][], color: 1 | 2, config: any, passed: boolea
     const temp = simulateMove(board, move, color);
     const evalScore = -fullSearch(temp, 3 - color as 1 | 2, config, false);
     best = Math.max(best, evalScore);
-
     if (config.endgame?.usePruning && best >= 64) break;
   }
 
   return best;
 }
 
-// -------------------- MCTS (後で実装) --------------------
+// -------------------- MCTS（未実装） --------------------
 
-function getBestMoveMCTS(board: number[][], turn: 1 | 2, config: any) {
-  // TODO: MCTSは後で
-  return null;
-}
+// function getBestMoveMCTS(_board: number[][], _turn: 1 | 2, _config: any) {
+//   return null;
+// }
