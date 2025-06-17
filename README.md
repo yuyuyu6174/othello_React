@@ -1,54 +1,34 @@
-# React + TypeScript + Vite
+# othello_React
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite で構築されたオセロ（リバーシ）ゲームです。  
+CPU対戦、2人対戦、今後はオンライン対戦も予定されています。
 
-Currently, two official plugins are available:
+## 主な機能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- プレイヤー同士の2人対戦
+- 複数レベルのCPUと対戦可能
+- プレイヤーの色（黒／白／ランダム）選択機能
+- CPUの思考をWeb Workerで非同期処理
+- CPUの思考遅延時間の調整が可能
+- 再戦機能あり
 
-## Expanding the ESLint configuration
+## デモページ
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+GitHub Pages にて公開中  
+[https://yuyuyu6174.github.io/othello_React](https://yuyuyu6174.github.io/othello_React)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## 使用技術
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- React（Hooks）
+- TypeScript
+- Vite
+- Web Worker（CPU処理用）
+- CSS
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 開発環境の構築
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+```bash
+git clone https://github.com/yuyuyu6174/othello_React.git
+cd othello_React
+npm install
+npm run dev
