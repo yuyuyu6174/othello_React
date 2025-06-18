@@ -403,7 +403,10 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'cpu_vs_cpu_result.txt';
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      a.download = `cpu_vs_cpu_result_${timestamp}.txt`;
       a.click();
       URL.revokeObjectURL(url);
     };
