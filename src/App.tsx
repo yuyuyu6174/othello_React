@@ -399,13 +399,15 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
 黒の勝率: ${((stats.blackWins / stats.games) * 100).toFixed(0)}%`;
 
     const download = () => {
+      if (!window.confirm('結果をダウンロードしますか？')) return;
+
       const blob = new Blob([summary], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       const now = new Date();
       const pad = (n: number) => String(n).padStart(2, '0');
-      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
       a.download = `cpu_vs_cpu_result_${timestamp}.txt`;
       a.click();
       URL.revokeObjectURL(url);
