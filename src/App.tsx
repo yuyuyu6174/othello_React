@@ -6,6 +6,8 @@ import { AI_CONFIG, TIMING_CONFIG } from './ai/config';
 import { useCpuWorker } from './hooks/useCpuWorker';
 import type { Cell } from './types';
 
+const DEFAULT_CPU_DELAY_MS = TIMING_CONFIG.cpuDelayMs;
+
 const SIZE = 8;
 
 type Mode =
@@ -70,6 +72,7 @@ function App() {
 
   useEffect(() => {
     if (mode === 'cpu') {
+      TIMING_CONFIG.cpuDelayMs = DEFAULT_CPU_DELAY_MS;
       const resolved = resolvePlayerColor();
       setActualPlayerColor(resolved);
       randomRef.current = playerColor === 'random';
