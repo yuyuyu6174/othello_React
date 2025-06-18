@@ -1,16 +1,5 @@
-import { SIZE, EMPTY, BLACK, WHITE } from './config';
+import { SIZE, EMPTY, BLACK, WHITE, DEFAULT_AI_CONFIG } from './config';
 
-// デフォルトの重みマトリクス
-export const DEFAULT_WEIGHTS: number[][] = [
-  [100, -25, 10, 5, 5, 10, -25, 100],
-  [-25, -50, 1, 1, 1, 1, -50, -25],
-  [10, 1, 3, 2, 2, 3, 1, 10],
-  [5, 1, 2, 1, 1, 2, 1, 5],
-  [5, 1, 2, 1, 1, 2, 1, 5],
-  [10, 1, 3, 2, 2, 3, 1, 10],
-  [-25, -50, 1, 1, 1, 1, -50, -25],
-  [100, -25, 10, 5, 5, 10, -25, 100]
-];
 
 type Board = number[][];
 
@@ -73,31 +62,30 @@ export function evaluateBoard(board: Board, color: number): number {
 
 // 2. 戦略評価（固定重み）
 export function evaluateStrategicBoard(board: Board, color: number, config: any = {}): number {
-  return evaluateStrategicGeneralBoard(board, color, config, true);
+  return evaluateStrategicGeneralBoard(board, color, config);
 }
 
 // 3. 戦略評価（調整パラメータあり）
 export function evaluateStrategicAdvancedBoard(board: Board, color: number, config: any = {}): number {
-  return evaluateStrategicGeneralBoard(board, color, config, false);
+  return evaluateStrategicGeneralBoard(board, color, config);
 }
 
 // 内部共通評価関数
 function evaluateStrategicGeneralBoard(
   board: Board,
   color: number,
-  config: any = {},
-  useDefaults = true
+  config: any = {}
 ): number {
   const opponent = 3 - color;
   let score = 0;
 
-  const weights = config.weights || DEFAULT_WEIGHTS;
+  const weights = config.weights ?? DEFAULT_AI_CONFIG.weights;
   const useWeights = config.useWeights !== false;
 
-  const stableBonus = useDefaults ? 20 : config.stableStoneBonus ?? 20;
-  const parityBonus = useDefaults ? 40 : config.parityWeight ?? 40;
-  const xPenalty = useDefaults ? 30 : config.xSquarePenalty ?? 50;
-  const trapPenalty = useDefaults ? 30 : config.trapPenalty ?? 30;
+  const stableBonus = config.stableStoneBonus ?? DEFAULT_AI_CONFIG.stableStoneBonus;
+  const parityBonus = config.parityWeight ?? DEFAULT_AI_CONFIG.parityWeight;
+  const xPenalty = config.xSquarePenalty ?? DEFAULT_AI_CONFIG.xSquarePenalty;
+  const trapPenalty = config.trapPenalty ?? DEFAULT_AI_CONFIG.trapPenalty;
 
   // 重みスコア
   if (useWeights) {

@@ -22,6 +22,32 @@ export const TIMING_CONFIG = {
 };
 
 // ========================
+// AIデフォルト設定
+// ========================
+
+export const DEFAULT_AI_CONFIG: Partial<AIConfig> = {
+  visible: true,
+  depth: 2,
+  weights: [
+    [100, -25, 10, 5, 5, 10, -25, 100],
+    [-25, -50, 1, 1, 1, 1, -50, -25],
+    [10, 1, 3, 2, 2, 3, 1, 10],
+    [5, 1, 2, 1, 1, 2, 1, 5],
+    [5, 1, 2, 1, 1, 2, 1, 5],
+    [10, 1, 3, 2, 2, 3, 1, 10],
+    [-25, -50, 1, 1, 1, 1, -50, -25],
+    [100, -25, 10, 5, 5, 10, -25, 100]
+  ],
+  parityWeight: 40,
+  stableStoneBonus: 20,
+  xSquarePenalty: 30,
+  trapPenalty: 30,
+  endgame: {
+    maxEmpty: 12,
+    usePruning: true,
+  },
+};
+// ========================
 // AIレベル定義
 // ========================
 
@@ -54,6 +80,7 @@ export interface AIConfig {
     usePruning: boolean;
   };
 }
+
 
 export const AI_CONFIG: { [level: number]: AIConfig } = {
   1: {
