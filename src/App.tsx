@@ -39,6 +39,8 @@ function App() {
   const [numMatches, setNumMatches] = useState(1);
   const [currentMatch, setCurrentMatch] = useState(0);
   const [cpu1ActualColor, setCpu1ActualColor] = useState<1 | 2>(1);
+  const cpuCpuCancelRef = useRef(false);
+  const cpuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [stats, setStats] = useState({
     games: 0,
     blackWins: 0,
@@ -84,6 +86,11 @@ function App() {
       setBoard(createInitialBoard());
       setTurn(1);
       setGameOver(false);
+      cpuCpuCancelRef.current = false;
+      if (cpuTimeoutRef.current) {
+        clearTimeout(cpuTimeoutRef.current);
+        cpuTimeoutRef.current = null;
+      }
       setStats({
         games: 0,
         blackWins: 0,
@@ -153,8 +160,13 @@ function App() {
     const start = performance.now();
     const thinking = calculateMove({ board, turn, level });
 
-    setTimeout(async () => {
+    cpuTimeoutRef.current = setTimeout(async () => {
       const move = await thinking;
+      if (cpuCpuCancelRef.current) {
+        setCpuThinking(false);
+        cpuTimeoutRef.current = null;
+        return;
+      }
       if (!move) return;
       const newBoard = board.map(row => [...row]);
       newBoard[move.y][move.x] = turn;
@@ -170,6 +182,7 @@ function App() {
       }
       setTurn(3 - turn as 1 | 2);
       setCpuThinking(false);
+      cpuTimeoutRef.current = null;
     }, TIMING_CONFIG.cpuDelayMs);
   }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking]);
 
@@ -198,6 +211,17 @@ function App() {
     setMessage(firstTurn === 1 ? '黒の番です' : '白の番です');
   };
 
+  const abortCpuCpu = (next: Mode = 'cpu-cpu-result') => {
+    cpuCpuCancelRef.current = true;
+    if (cpuTimeoutRef.current) {
+      clearTimeout(cpuTimeoutRef.current);
+      cpuTimeoutRef.current = null;
+    }
+    setCpuThinking(false);
+    setGameOver(true);
+    setMode(next);
+  };
+
   const finishCpuCpuGame = (black: number, white: number) => {
     setStats(s => ({
       ...s,
@@ -207,6 +231,10 @@ function App() {
       blackScoreTotal: s.blackScoreTotal + black,
       whiteScoreTotal: s.whiteScoreTotal + white,
     }));
+    if (cpuTimeoutRef.current) {
+      clearTimeout(cpuTimeoutRef.current);
+      cpuTimeoutRef.current = null;
+    }
     if (currentMatch >= numMatches) {
       setMode('cpu-cpu-result');
     } else {
@@ -399,12 +427,18 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         </p>
         <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
         <p>{message}</p>
-        <button onClick={() => setMode('title')}>タイトルに戻る</button>
+        <button
+          onClick={() =>
+            mode === 'cpu-cpu' ? abortCpuCpu('title') : setMode('title')
+          }
+        >
+          タイトルに戻る
+        </button>
         {(mode === 'cpu' || mode === 'pvp') && gameOver && (
           <button onClick={restartGame}>再戦する</button>
         )}
         {mode === 'cpu-cpu' && (
-          <button onClick={() => setMode('cpu-cpu-result')} style={{ marginLeft: 8 }}>
+          <button onClick={abortCpuCpu} style={{ marginLeft: 8 }}>
             中止
           </button>
         )}
