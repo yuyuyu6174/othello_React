@@ -310,11 +310,11 @@ function getBestMoveMCTS(board: number[][], turn: 1 | 2, config: any) {
     const result = rollout(node.board, node.color, turn);
 
     // Backpropagation
-    let current: MCTSNode | undefined = node;
-    while (current) {
-      current.visits += 1;
-      current.wins += result;
-      current = current.parent;
+    let backNode: MCTSNode | undefined = node;
+    while (backNode) {
+      backNode.visits += 1;
+      backNode.wins += result;
+      backNode = backNode.parent;
     }
 
     iter++;
