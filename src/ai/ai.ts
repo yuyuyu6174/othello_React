@@ -1,5 +1,5 @@
 import { AI_CONFIG, DEFAULT_AI_CONFIG, WHITE, BLACK } from './config';
-import { getAllValidMoves, simulateMove } from '../logic/game';
+import { getAllValidMoves, simulateMove, countStones } from '../logic/game';
 
 // transposition table (for minimax)
 const transpositionTable = new Map<string, number>();
@@ -34,7 +34,10 @@ export function cpuMove(
     return getBestMoveIterative(board, turn, config.timeLimit || 1000, evalFunc, config);
   }
 
-  // 未実装
+  if (config.type === 'mcts') {
+    return getBestMoveMCTS(board, turn, config);
+  }
+
   return null;
 }
 
@@ -205,8 +208,125 @@ function fullSearch(
   return best;
 }
 
-// -------------------- MCTS（未実装） --------------------
+// -------------------- MCTS --------------------
 
-// function getBestMoveMCTS(_board: number[][], _turn: 1 | 2, _config: any) {
-//   return null;
-// }
+type MCTSNode = {
+  board: number[][];
+  move?: { x: number; y: number; flips: [number, number][] };
+  parent?: MCTSNode;
+  children: MCTSNode[];
+  untried: { x: number; y: number; flips: [number, number][] }[];
+  wins: number;
+  visits: number;
+  color: 1 | 2; // color to move at this node
+};
+
+function selectChild(node: MCTSNode, c: number): MCTSNode {
+  let bestScore = -Infinity;
+  let bestChild = node.children[0];
+  for (const child of node.children) {
+    const uct = child.visits === 0
+      ? Infinity
+      : (child.wins / child.visits) + c * Math.sqrt(Math.log(node.visits) / child.visits);
+    if (uct > bestScore) {
+      bestScore = uct;
+      bestChild = child;
+    }
+  }
+  return bestChild;
+}
+
+function rollout(board: number[][], color: 1 | 2, rootColor: 1 | 2): number {
+  let currentBoard = board.map(row => [...row]);
+  let currentColor = color;
+  while (true) {
+    const moves = getAllValidMoves(currentColor, currentBoard);
+    if (moves.length === 0) {
+      const opp = getAllValidMoves((3 - currentColor) as 1 | 2, currentBoard);
+      if (opp.length === 0) break;
+      currentColor = (3 - currentColor) as 1 | 2;
+      continue;
+    }
+    const m = moves[Math.floor(Math.random() * moves.length)];
+    currentBoard = simulateMove(currentBoard, m, currentColor);
+    currentColor = (3 - currentColor) as 1 | 2;
+  }
+  const { black, white } = countStones(currentBoard);
+  if (rootColor === BLACK) {
+    if (black > white) return 1;
+    if (black === white) return 0.5;
+    return 0;
+  } else {
+    if (white > black) return 1;
+    if (white === black) return 0.5;
+    return 0;
+  }
+}
+
+function getBestMoveMCTS(board: number[][], turn: 1 | 2, config: any) {
+  const timeLimit = config.timeLimit ?? 1000;
+  const simulations = config.simulations ?? 1000;
+  const c = config.explorationConstant ?? 1.4;
+
+  const root: MCTSNode = {
+    board,
+    children: [],
+    untried: getAllValidMoves(turn, board),
+    wins: 0,
+    visits: 0,
+    color: turn,
+  };
+
+  const start = Date.now();
+  let iter = 0;
+  while (Date.now() - start < timeLimit && iter < simulations) {
+    let node = root;
+
+    // Selection
+    while (node.untried.length === 0 && node.children.length > 0) {
+      node = selectChild(node, c);
+    }
+
+    // Expansion
+    if (node.untried.length > 0) {
+      const idx = Math.floor(Math.random() * node.untried.length);
+      const move = node.untried.splice(idx, 1)[0];
+      const nextBoard = simulateMove(node.board, move, node.color);
+      const child: MCTSNode = {
+        board: nextBoard,
+        move,
+        parent: node,
+        children: [],
+        untried: getAllValidMoves((3 - node.color) as 1 | 2, nextBoard),
+        wins: 0,
+        visits: 0,
+        color: (3 - node.color) as 1 | 2,
+      };
+      node.children.push(child);
+      node = child;
+    }
+
+    // Simulation
+    const result = rollout(node.board, node.color, turn);
+
+    // Backpropagation
+    while (node) {
+      node.visits += 1;
+      node.wins += result;
+      node = node.parent as MCTSNode | undefined;
+    }
+
+    iter++;
+  }
+
+  let bestMove = null;
+  let bestVisits = -1;
+  for (const child of root.children) {
+    if (child.visits > bestVisits) {
+      bestVisits = child.visits;
+      bestMove = child.move ?? null;
+    }
+  }
+
+  return bestMove;
+}
