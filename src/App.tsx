@@ -439,7 +439,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
           <button onClick={restartGame}>再戦する</button>
         )}
         {mode === 'cpu-cpu' && (
-          <button onClick={abortCpuCpu} style={{ marginLeft: 8 }}>
+          <button onClick={() => abortCpuCpu()} style={{ marginLeft: 8 }}>
             中止
           </button>
         )}
