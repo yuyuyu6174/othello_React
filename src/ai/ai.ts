@@ -1,4 +1,4 @@
-import { AI_CONFIG, WHITE, BLACK } from './config';
+import { AI_CONFIG, DEFAULT_AI_CONFIG, WHITE, BLACK } from './config';
 import { getAllValidMoves, simulateMove } from '../logic/game';
 
 // transposition table (for minimax)
@@ -9,7 +9,12 @@ export function cpuMove(
   turn: 1 | 2,
   level: number
 ): { x: number; y: number; flips: [number, number][] } | null {
-  const config = AI_CONFIG[level] || AI_CONFIG[1];
+  const base = AI_CONFIG[level] || AI_CONFIG[1];
+  const config: any = {
+    ...DEFAULT_AI_CONFIG,
+    ...base,
+    endgame: { ...DEFAULT_AI_CONFIG.endgame, ...(base.endgame || {}) }
+  };
   const evalFunc = (b: number[][]) => config.evaluator(b, turn, config);
   const emptyCount = board.flat().filter(c => c === 0).length;
 
@@ -20,7 +25,7 @@ export function cpuMove(
   if (config.type === 'minimax') {
     const depth = config.dynamicDepth
       ? getDynamicDepth(emptyCount, config.depthTable || [])
-      : config.depth || 2;
+      : config.depth ?? DEFAULT_AI_CONFIG.depth ?? 2;
 
     return getBestMoveMinimax(board, turn, depth, evalFunc, config);
   }
