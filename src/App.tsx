@@ -205,6 +205,7 @@ function App() {
     }
     setCpuThinking(false);
     setGameOver(true);
+    setCurrentMatch(numMatches);
     setMode(next);
   };
 
