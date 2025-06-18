@@ -36,6 +36,7 @@ function App() {
   const [cpu1Level, setCpu1Level] = useState<keyof typeof AI_CONFIG>(1);
   const [cpu2Level, setCpu2Level] = useState<keyof typeof AI_CONFIG>(2);
   const [cpu1Color, setCpu1Color] = useState<'black' | 'white'>('black');
+  const [cpuDelay, setCpuDelay] = useState(TIMING_CONFIG.cpuDelayMs);
   const [numMatches, setNumMatches] = useState(1);
   const [currentMatch, setCurrentMatch] = useState(0);
   const [cpu1ActualColor, setCpu1ActualColor] = useState<1 | 2>(1);
@@ -82,6 +83,7 @@ function App() {
       setGameOver(false);
       setMessage('黒の番です');
     } else if (mode === 'cpu-cpu') {
+      TIMING_CONFIG.cpuDelayMs = cpuDelay;
       setCpu1ActualColor(cpu1Color === 'black' ? 1 : 2);
       setBoard(createInitialBoard());
       setTurn(1);
@@ -137,31 +139,16 @@ function App() {
     if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking) return;
     if (mode === 'cpu' && turn !== (3 - actualPlayerColor)) return;
     const moves = getValidMoves(turn, board);
-    if (moves.length === 0) {
-      const opponentMoves = getValidMoves(3 - turn as 1 | 2, board);
-      if (opponentMoves.length === 0) {
-        const { black, white } = countStones(board);
-        setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ${black === white ? "引き分け" : black > white ? "黒の勝ち！" : "白の勝ち！"}`);
-        setGameOver(true);
-        setValidMoves([]);
-        if (mode === 'cpu-cpu') {
-          finishCpuCpuGame(black, white);
-        }
-      } else {
-        setMessage(`${turn === 1 ? "黒" : "白"}は打てません。パス！`);
-        setTurn(3 - turn as 1 | 2);
-      }
-      return;
-    }
+    if (moves.length === 0) return;
 
     setMessage("CPU思考中...");
     setCpuThinking(true);
     const level = mode === 'cpu' ? cpuLevel : (turn === cpu1ActualColor ? cpu1Level : cpu2Level);
     const start = performance.now();
-    const thinking = calculateMove({ board, turn, level });
+    const thinking = calculateMove({ board, turn, level }).then(move => ({ move, elapsed: performance.now() - start }));
 
     cpuTimeoutRef.current = setTimeout(async () => {
-      const move = await thinking;
+      const { move, elapsed } = await thinking;
       if (cpuCpuCancelRef.current) {
         setCpuThinking(false);
         cpuTimeoutRef.current = null;
@@ -173,7 +160,6 @@ function App() {
       move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
       setBoard(newBoard);
       if (mode === 'cpu-cpu') {
-        const elapsed = performance.now() - start;
         if (turn === 1) {
           setStats(s => ({ ...s, blackTimeTotal: s.blackTimeTotal + elapsed, blackMoveCount: s.blackMoveCount + 1, turnTotal: s.turnTotal + 1 }));
         } else {
@@ -363,6 +349,18 @@ function App() {
           </div>
           <div style={{ marginTop: 8 }}>
             <label>
+              待ち時間(ms)：
+              <input
+                type="number"
+                min={0}
+                value={cpuDelay}
+                onChange={(e) => setCpuDelay(Number(e.target.value))}
+                style={{ marginLeft: 8 }}
+              />
+            </label>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>
               対戦回数：
               <input
                 type="number"
@@ -383,7 +381,9 @@ function App() {
   }
 
   if (mode === 'cpu-cpu-result') {
+    const cpuNames = `${AI_CONFIG[cpu1Level]?.name} vs ${AI_CONFIG[cpu2Level]?.name}`;
     const summary = `CPU対CPU対戦結果（${stats.games}戦）  ${new Date().toLocaleString()}
+${cpuNames}
 AI1（${cpu1ActualColor === 1 ? '黒' : '白'}）: ${AI_CONFIG[cpu1Level]?.name}
 AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
 
@@ -423,7 +423,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
             ? '2人対戦'
             : mode === 'cpu'
             ? `VS CPU（${AI_CONFIG[cpuLevel]?.name}）`
-            : `CPU vs CPU ${currentMatch}/${numMatches}`}
+            : `CPU vs CPU ${currentMatch}/${numMatches}（${AI_CONFIG[cpu1Level]?.name} vs ${AI_CONFIG[cpu2Level]?.name}）`}
         </p>
         <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
         <p>{message}</p>
