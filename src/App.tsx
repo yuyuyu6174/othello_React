@@ -410,7 +410,12 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         <h1>結果</h1>
         <pre style={{ whiteSpace: 'pre-wrap' }}>{summary}</pre>
         <button onClick={download}>結果をダウンロード</button>
-        <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>タイトルに戻る</button>
+        <button onClick={() => setMode('cpu-cpu-select')} style={{ marginLeft: 8 }}>
+          CPU vs CPU 設定に戻る
+        </button>
+        <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>
+          タイトルに戻る
+        </button>
       </div>
     );
   }
