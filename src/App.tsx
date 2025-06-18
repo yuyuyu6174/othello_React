@@ -8,7 +8,15 @@ import type { Cell } from './types';
 
 const SIZE = 8;
 
-type Mode = 'title' | 'cpu-select' | 'cpu' | 'pvp' | 'online';
+type Mode =
+  | 'title'
+  | 'cpu-select'
+  | 'cpu'
+  | 'pvp'
+  | 'online'
+  | 'cpu-cpu-select'
+  | 'cpu-cpu'
+  | 'cpu-cpu-result';
 
 function App() {
   const createInitialBoard = (): Cell[][] => {
@@ -24,6 +32,25 @@ function App() {
   const [cpuLevel, setCpuLevel] = useState<keyof typeof AI_CONFIG>(1);
   const [playerColor, setPlayerColor] = useState<'black' | 'white' | 'random'>('black');
   const [actualPlayerColor, setActualPlayerColor] = useState<1 | 2>(1);
+  // CPU vs CPU settings
+  const [cpu1Level, setCpu1Level] = useState<keyof typeof AI_CONFIG>(1);
+  const [cpu2Level, setCpu2Level] = useState<keyof typeof AI_CONFIG>(2);
+  const [cpu1Color, setCpu1Color] = useState<'black' | 'white'>('black');
+  const [numMatches, setNumMatches] = useState(1);
+  const [currentMatch, setCurrentMatch] = useState(0);
+  const [cpu1ActualColor, setCpu1ActualColor] = useState<1 | 2>(1);
+  const [stats, setStats] = useState({
+    games: 0,
+    blackWins: 0,
+    whiteWins: 0,
+    blackScoreTotal: 0,
+    whiteScoreTotal: 0,
+    blackTimeTotal: 0,
+    whiteTimeTotal: 0,
+    blackMoveCount: 0,
+    whiteMoveCount: 0,
+    turnTotal: 0,
+  });
   const [board, setBoard] = useState<Cell[][]>(createInitialBoard);
   const [turn, setTurn] = useState<1 | 2>(1);
   const [validMoves, setValidMoves] = useState<{ x: number; y: number; flips: [number, number][] }[]>([]);
@@ -52,11 +79,30 @@ function App() {
       setTurn(1);
       setGameOver(false);
       setMessage('黒の番です');
+    } else if (mode === 'cpu-cpu') {
+      setCpu1ActualColor(cpu1Color === 'black' ? 1 : 2);
+      setBoard(createInitialBoard());
+      setTurn(1);
+      setGameOver(false);
+      setStats({
+        games: 0,
+        blackWins: 0,
+        whiteWins: 0,
+        blackScoreTotal: 0,
+        whiteScoreTotal: 0,
+        blackTimeTotal: 0,
+        whiteTimeTotal: 0,
+        blackMoveCount: 0,
+        whiteMoveCount: 0,
+        turnTotal: 0,
+      });
+      setCurrentMatch(1);
+      setMessage('対戦開始');
     }
   }, [mode]);
 
   useEffect(() => {
-    if ((mode !== 'pvp' && mode !== 'cpu') || gameOver) return;
+    if ((mode !== 'pvp' && mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver) return;
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) {
       const opponentMoves = getValidMoves(3 - turn as 1 | 2, board);
@@ -65,6 +111,9 @@ function App() {
         setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ${black === white ? "引き分け" : black > white ? "黒の勝ち！" : "白の勝ち！"}`);
         setGameOver(true);
         setValidMoves([]);
+        if (mode === 'cpu-cpu') {
+          finishCpuCpuGame(black, white);
+        }
       } else {
         setMessage(`${turn === 1 ? "黒" : "白"}は打てません。パス！`);
         setTurn(3 - turn as 1 | 2);
@@ -78,7 +127,8 @@ function App() {
   }, [turn, board, gameOver, mode, actualPlayerColor]);
 
   useEffect(() => {
-    if (mode !== 'cpu' || gameOver || turn !== (3 - actualPlayerColor) || cpuThinking) return;
+    if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking) return;
+    if (mode === 'cpu' && turn !== (3 - actualPlayerColor)) return;
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) {
       const opponentMoves = getValidMoves(3 - turn as 1 | 2, board);
@@ -87,6 +137,9 @@ function App() {
         setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ${black === white ? "引き分け" : black > white ? "黒の勝ち！" : "白の勝ち！"}`);
         setGameOver(true);
         setValidMoves([]);
+        if (mode === 'cpu-cpu') {
+          finishCpuCpuGame(black, white);
+        }
       } else {
         setMessage(`${turn === 1 ? "黒" : "白"}は打てません。パス！`);
         setTurn(3 - turn as 1 | 2);
@@ -96,7 +149,9 @@ function App() {
 
     setMessage("CPU思考中...");
     setCpuThinking(true);
-    const thinking = calculateMove({ board, turn, level: cpuLevel });
+    const level = mode === 'cpu' ? cpuLevel : (turn === cpu1ActualColor ? cpu1Level : cpu2Level);
+    const start = performance.now();
+    const thinking = calculateMove({ board, turn, level });
 
     setTimeout(async () => {
       const move = await thinking;
@@ -105,10 +160,18 @@ function App() {
       newBoard[move.y][move.x] = turn;
       move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
       setBoard(newBoard);
+      if (mode === 'cpu-cpu') {
+        const elapsed = performance.now() - start;
+        if (turn === 1) {
+          setStats(s => ({ ...s, blackTimeTotal: s.blackTimeTotal + elapsed, blackMoveCount: s.blackMoveCount + 1, turnTotal: s.turnTotal + 1 }));
+        } else {
+          setStats(s => ({ ...s, whiteTimeTotal: s.whiteTimeTotal + elapsed, whiteMoveCount: s.whiteMoveCount + 1, turnTotal: s.turnTotal + 1 }));
+        }
+      }
       setTurn(3 - turn as 1 | 2);
       setCpuThinking(false);
     }, TIMING_CONFIG.cpuDelayMs);
-  }, [turn, board, mode, gameOver, cpuLevel, actualPlayerColor, cpuThinking]);
+  }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking]);
 
   const handleClick = (x: number, y: number) => {
     if (gameOver) return;
@@ -135,6 +198,27 @@ function App() {
     setMessage(firstTurn === 1 ? '黒の番です' : '白の番です');
   };
 
+  const finishCpuCpuGame = (black: number, white: number) => {
+    setStats(s => ({
+      ...s,
+      games: s.games + 1,
+      blackWins: s.blackWins + (black > white ? 1 : 0),
+      whiteWins: s.whiteWins + (white > black ? 1 : 0),
+      blackScoreTotal: s.blackScoreTotal + black,
+      whiteScoreTotal: s.whiteScoreTotal + white,
+    }));
+    if (currentMatch >= numMatches) {
+      setMode('cpu-cpu-result');
+    } else {
+      setCurrentMatch(c => c + 1);
+      setTimeout(() => {
+        setBoard(createInitialBoard());
+        setTurn(1);
+        setGameOver(false);
+      }, TIMING_CONFIG.cpuDelayMs);
+    }
+  };
+
   if (mode === 'title') {
     return (
       <div>
@@ -143,6 +227,7 @@ function App() {
           <h2>モードを選択してください</h2>
           <div className="mode-buttons">
             <button onClick={() => setMode('cpu-select')}>CPU対戦</button>
+            <button onClick={() => setMode('cpu-cpu-select')}>CPU vs CPU</button>
             <button onClick={() => setMode('pvp')}>2人対戦</button>
             <button onClick={() => alert('オンライン対戦は現在準備中です。')}>オンライン対戦</button>
           </div>
@@ -198,16 +283,136 @@ function App() {
     );
   }
 
-  return (
-    <div>
-      <h1>オセロ</h1>
-      <p style={{ fontWeight: 'bold' }}>{mode === 'cpu' ? `VS CPU（${AI_CONFIG[cpuLevel]?.name}）` : '2人対戦'}</p>
-      <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
-      <p>{message}</p>
-      <button onClick={() => setMode('title')}>タイトルに戻る</button>
-      {gameOver && <button onClick={restartGame}>再戦する</button>}
-    </div>
-  );
+  if (mode === 'cpu-cpu-select') {
+    return (
+      <div>
+        <h1>CPU vs CPU 設定</h1>
+        <div>
+          <label>
+            CPU1 レベル：
+            <select
+              value={cpu1Level}
+              onChange={(e) => setCpu1Level(Number(e.target.value))}
+              style={{ marginLeft: 8 }}
+            >
+              {Object.entries(AI_CONFIG).map(([key, cfg]) =>
+                cfg.visible ? (
+                  <option key={key} value={Number(key)}>
+                    {cfg.name}
+                  </option>
+                ) : null
+              )}
+            </select>
+          </label>
+          <div style={{ marginTop: 8 }}>
+            CPU2 レベル：
+            <select
+              value={cpu2Level}
+              onChange={(e) => setCpu2Level(Number(e.target.value))}
+              style={{ marginLeft: 8 }}
+            >
+              {Object.entries(AI_CONFIG).map(([key, cfg]) =>
+                cfg.visible ? (
+                  <option key={key} value={Number(key)}>
+                    {cfg.name}
+                  </option>
+                ) : null
+              )}
+            </select>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>
+              CPU1の色：
+              <select
+                value={cpu1Color}
+                onChange={(e) => setCpu1Color(e.target.value as 'black' | 'white')}
+                style={{ marginLeft: 8 }}
+              >
+                <option value="black">黒</option>
+                <option value="white">白</option>
+              </select>
+            </label>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>
+              対戦回数：
+              <input
+                type="number"
+                min={1}
+                value={numMatches}
+                onChange={(e) => setNumMatches(Number(e.target.value))}
+                style={{ marginLeft: 8 }}
+              />
+            </label>
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <button onClick={() => setMode('cpu-cpu')}>開始</button>
+            <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>戻る</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'cpu-cpu-result') {
+    const summary = `CPU対CPU対戦結果（${stats.games}戦）  ${new Date().toLocaleString()}
+AI1（${cpu1ActualColor === 1 ? '黒' : '白'}）: ${AI_CONFIG[cpu1Level]?.name}
+AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
+
+勝敗: 黒 ${stats.blackWins}勝 / 白 ${stats.whiteWins}勝
+平均黒スコア: ${(stats.blackScoreTotal / stats.games).toFixed(1)} / 平均白スコア: ${(stats.whiteScoreTotal / stats.games).toFixed(1)}
+黒の平均応答時間: ${(stats.blackTimeTotal / stats.blackMoveCount || 0).toFixed(1)}ms
+白の平均応答時間: ${(stats.whiteTimeTotal / stats.whiteMoveCount || 0).toFixed(1)}ms
+平均ターン数: ${(stats.turnTotal / stats.games).toFixed(1)}
+黒の勝率: ${((stats.blackWins / stats.games) * 100).toFixed(0)}%`;
+
+    const download = () => {
+      const blob = new Blob([summary], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cpu_vs_cpu_result.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    return (
+      <div>
+        <h1>結果</h1>
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{summary}</pre>
+        <button onClick={download}>結果をダウンロード</button>
+        <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>タイトルに戻る</button>
+      </div>
+    );
+  }
+
+  if (mode === 'cpu' || mode === 'pvp' || mode === 'cpu-cpu') {
+    return (
+      <div>
+        <h1>オセロ</h1>
+        <p style={{ fontWeight: 'bold' }}>
+          {mode === 'pvp'
+            ? '2人対戦'
+            : mode === 'cpu'
+            ? `VS CPU（${AI_CONFIG[cpuLevel]?.name}）`
+            : `CPU vs CPU ${currentMatch}/${numMatches}`}
+        </p>
+        <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
+        <p>{message}</p>
+        <button onClick={() => setMode('title')}>タイトルに戻る</button>
+        {(mode === 'cpu' || mode === 'pvp') && gameOver && (
+          <button onClick={restartGame}>再戦する</button>
+        )}
+        {mode === 'cpu-cpu' && (
+          <button onClick={() => setMode('cpu-cpu-result')} style={{ marginLeft: 8 }}>
+            中止
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 }
 
 export default App;
