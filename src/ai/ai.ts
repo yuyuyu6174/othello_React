@@ -3,6 +3,8 @@ import { getAllValidMoves, simulateMove, countStones } from '../logic/game';
 
 // transposition table (for minimax)
 const transpositionTable = new Map<string, number>();
+// transposition table for endgame solver
+const endgameTranspositionTable = new Map<string, number>();
 
 export function cpuMove(
   board: number[][],
@@ -167,9 +169,18 @@ function getBestMoveFullSearch(board: number[][], color: 1 | 2, config: any) {
   let bestMove = null;
   let bestEval = -Infinity;
 
-  for (const move of moves) {
+  // simple move ordering using evaluation function
+  const ordered = moves
+    .map(m => {
+      const next = simulateMove(board, m, color);
+      const score = config.evaluator(next, color, config);
+      return { move: m, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  for (const { move } of ordered) {
     const temp = simulateMove(board, move, color);
-    const evalScore = -fullSearch(temp, 3 - color as 1 | 2, config, false);
+    const evalScore = -fullSearch(temp, 3 - color as 1 | 2, config, false, -Infinity, Infinity);
     if (evalScore > bestEval) {
       bestEval = evalScore;
       bestMove = move;
@@ -183,28 +194,48 @@ function fullSearch(
   board: number[][],
   color: 1 | 2,
   config: any,
-  _passed: boolean // unused, but needed for compatibility
+  _passed: boolean,
+  alpha: number = -Infinity,
+  beta: number = Infinity
 ): number {
+  const key = JSON.stringify(board) + color;
+  if (endgameTranspositionTable.has(key)) return endgameTranspositionTable.get(key)!;
+
   const moves = getAllValidMoves(color, board);
   if (moves.length === 0) {
     const opponentMoves = getAllValidMoves(3 - color as 1 | 2, board);
     if (opponentMoves.length === 0) {
       const black = board.flat().filter(c => c === BLACK).length;
       const white = board.flat().filter(c => c === WHITE).length;
-      return color === BLACK ? black - white : white - black;
+      const res = color === BLACK ? black - white : white - black;
+      endgameTranspositionTable.set(key, res);
+      return res;
     } else {
-      return -fullSearch(board, 3 - color as 1 | 2, config, true);
+      const res = -fullSearch(board, 3 - color as 1 | 2, config, true, -beta, -alpha);
+      endgameTranspositionTable.set(key, res);
+      return res;
     }
   }
 
+  // move ordering
+  const ordered = moves
+    .map(m => {
+      const next = simulateMove(board, m, color);
+      const score = config.evaluator(next, color, config);
+      return { move: m, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
   let best = -Infinity;
-  for (const move of moves) {
+  for (const { move } of ordered) {
     const temp = simulateMove(board, move, color);
-    const evalScore = -fullSearch(temp, 3 - color as 1 | 2, config, false);
+    const evalScore = -fullSearch(temp, 3 - color as 1 | 2, config, false, -beta, -alpha);
     best = Math.max(best, evalScore);
-    if (config.endgame?.usePruning && best >= 64) break;
+    alpha = Math.max(alpha, evalScore);
+    if (alpha >= beta || (config.endgame?.usePruning && best >= 64)) break;
   }
 
+  endgameTranspositionTable.set(key, best);
   return best;
 }
 
