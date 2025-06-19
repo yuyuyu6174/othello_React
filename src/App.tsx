@@ -146,7 +146,14 @@ function App() {
   }, [onlineState, mode]);
 
   useEffect(() => {
-    if ((mode !== 'pvp' && mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver) return;
+    if (gameOver) return;
+
+    if (mode === 'online') {
+      setValidMoves(getValidMoves(turn, board));
+      return;
+    }
+
+    if (mode !== 'pvp' && mode !== 'cpu' && mode !== 'cpu-cpu') return;
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) {
       const opponentMoves = getValidMoves(3 - turn as 1 | 2, board);
