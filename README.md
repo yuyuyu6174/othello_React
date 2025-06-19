@@ -11,7 +11,7 @@ CPU対戦、2人対戦、オンライン対戦に対応しています。
 - CPUの思考をWeb Workerで非同期処理
 - CPUの思考遅延時間の調整が可能
 - 再戦機能あり
-- 簡易オンライン対戦
+- オンライン対戦
 
 ## デモページ
 
@@ -33,8 +33,8 @@ git clone https://github.com/yuyuyu6174/othello_React.git
 cd othello_React
 npm install
 npm run dev
-# オンライン対戦を試す場合は別ターミナルで WebSocket サーバーを起動
-npm run server
 ```
 
-`npm run dev` でフロントエンド、`npm run server` で WebSocket サーバーが起動します。
+オンライン対戦機能では公開 WebSocket サーバー
+`wss://othello-server-1lz5.onrender.com/othello` を利用します。
+ローカルでサーバーを立てる必要はありません。
