@@ -11,6 +11,10 @@ export interface OnlineState {
   gameOver: boolean;
 }
 
+const SERVER_URL =
+  import.meta.env.VITE_ONLINE_SERVER_URL ??
+  'wss://othello-server-1lz5.onrender.com/othello';
+
 export function useOnlineGame() {
   const socketRef = useRef<WebSocket | null>(null);
   const [state, setState] = useState<OnlineState>({
@@ -23,7 +27,7 @@ export function useOnlineGame() {
   const [error, setError] = useState<string | null>(null);
 
   const connect = (type: MatchType, pass?: string) => {
-    const ws = new WebSocket('wss://othello-server-1lz5.onrender.com/othello');
+    const ws = new WebSocket(SERVER_URL);
     socketRef.current = ws;
     ws.onopen = () => {
       ws.send(
