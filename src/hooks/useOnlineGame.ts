@@ -19,6 +19,7 @@ const SERVER_URL =
 
 export function useOnlineGame() {
   const socketRef = useRef<WebSocket | null>(null);
+  const lastMatch = useRef<{ type: MatchType; pass?: string } | null>(null);
   const [state, setState] = useState<OnlineState>({
     board: [],
     turn: 1,
@@ -44,13 +45,19 @@ export function useOnlineGame() {
   };
 
   const connect = (type: MatchType, pass?: string) => {
+    lastMatch.current = { type, pass };
+    setState({
+      board: [],
+      turn: 1,
+      myColor: null,
+      waiting: true,
+      gameOver: false,
+      validMoves: [],
+    });
     const ws = new WebSocket(SERVER_URL);
     socketRef.current = ws;
     ws.onopen = () => {
-      ws.send(
-        JSON.stringify({ type: 'join', mode: type, key: pass ?? null })
-      );
-      setState(s => ({ ...s, waiting: true }));
+      ws.send(JSON.stringify({ type: 'join', mode: type, key: pass ?? null }));
     };
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
@@ -92,11 +99,15 @@ export function useOnlineGame() {
       }
     };
     ws.onclose = () => {
-      setState(s => ({
-        ...s,
-        waiting: false,
-        validMoves: [],
-      }));
+      setState(s => {
+        const next = computeNext(s.board, s.turn);
+        return {
+          ...s,
+          waiting: false,
+          gameOver: s.gameOver || next.over,
+          validMoves: [],
+        };
+      });
     };
     ws.onerror = () => {
       setError('connection error');
@@ -119,11 +130,18 @@ export function useOnlineGame() {
     }));
   };
 
+  const reconnect = () => {
+    if (lastMatch.current) {
+      disconnect();
+      connect(lastMatch.current.type, lastMatch.current.pass);
+    }
+  };
+
   useEffect(() => {
     return () => {
       socketRef.current?.close();
     };
   }, []);
 
-  return { state, error, connect, sendMove, disconnect };
+  return { state, error, connect, sendMove, disconnect, reconnect };
 }

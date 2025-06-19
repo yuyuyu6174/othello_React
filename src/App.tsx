@@ -49,6 +49,7 @@ function App() {
     connect: connectOnline,
     sendMove: sendOnlineMove,
     disconnect: disconnectOnline,
+    reconnect: reconnectOnline,
   } = useOnlineGame();
   const [passKey, setPassKey] = useState('');
   const cpuCpuCancelRef = useRef(false);
@@ -558,6 +559,9 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         </button>
         {(mode === 'cpu' || mode === 'pvp') && gameOver && (
           <button onClick={restartGame}>再戦する</button>
+        )}
+        {mode === 'online' && gameOver && (
+          <button onClick={reconnectOnline}>再戦する</button>
         )}
         {mode === 'cpu-cpu' && (
           <button onClick={() => abortCpuCpu()} style={{ marginLeft: 8 }}>
