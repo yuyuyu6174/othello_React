@@ -140,7 +140,10 @@ function App() {
     setGameOver(onlineState.gameOver);
     if (onlineState.waiting) {
       setMessage('対戦相手を待っています...');
-    } else if (!onlineState.gameOver) {
+    } else if (onlineState.gameOver) {
+      const { black, white } = countStones(onlineState.board);
+      setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ${black === white ? '引き分け' : black > white ? '黒の勝ち！' : '白の勝ち！'}`);
+    } else {
       setMessage(onlineState.myColor === onlineState.turn ? 'あなたの番です' : '相手の番です');
     }
   }, [onlineState, mode]);

@@ -29,6 +29,17 @@ export function useOnlineGame() {
   });
   const [error, setError] = useState<string | null>(null);
 
+  const computeNext = (board: Cell[][], turn: 1 | 2) => {
+    const moves = getValidMoves(turn, board);
+    if (moves.length === 0) {
+      const opp = getValidMoves(3 - turn as 1 | 2, board);
+      if (opp.length === 0) {
+        return { moves: [], over: true } as const;
+      }
+    }
+    return { moves, over: false } as const;
+  };
+
   const connect = (type: MatchType, pass?: string) => {
     const ws = new WebSocket(SERVER_URL);
     socketRef.current = ws;
@@ -41,24 +52,29 @@ export function useOnlineGame() {
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
       switch (msg.type) {
-        case 'start':
+        case 'start': {
+          const next = computeNext(msg.board, msg.turn);
           setState({
             board: msg.board,
             turn: msg.turn,
             myColor: msg.color,
             waiting: false,
-            gameOver: false,
-            validMoves: getValidMoves(msg.turn, msg.board),
+            gameOver: next.over,
+            validMoves: next.moves,
           });
           break;
-        case 'update':
+        }
+        case 'update': {
+          const next = computeNext(msg.board, msg.turn);
           setState(s => ({
             ...s,
             board: msg.board,
             turn: msg.turn,
-            validMoves: getValidMoves(msg.turn, msg.board),
+            gameOver: next.over,
+            validMoves: next.moves,
           }));
           break;
+        }
         case 'end':
           setState(s => ({
             ...s,
