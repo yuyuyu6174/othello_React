@@ -4,6 +4,7 @@ import './style.css';
 import { getValidMoves, countStones } from './logic/game';
 import { AI_CONFIG, TIMING_CONFIG } from './ai/config';
 import { useCpuWorker } from './hooks/useCpuWorker';
+import { useOnlineGame } from './hooks/useOnlineGame';
 import type { Cell } from './types';
 
 const DEFAULT_CPU_DELAY_MS = TIMING_CONFIG.cpuDelayMs;
@@ -15,6 +16,7 @@ type Mode =
   | 'cpu-select'
   | 'cpu'
   | 'pvp'
+  | 'online-select'
   | 'online'
   | 'cpu-cpu-select'
   | 'cpu-cpu'
@@ -42,6 +44,14 @@ function App() {
   const [numMatches, setNumMatches] = useState(1);
   const [currentMatch, setCurrentMatch] = useState(0);
   const [cpu1ActualColor, setCpu1ActualColor] = useState<1 | 2>(1);
+  const {
+    state: onlineState,
+    connect: connectOnline,
+    sendMove: sendOnlineMove,
+    disconnect: disconnectOnline,
+  } = useOnlineGame();
+  const [matchMode, setMatchMode] = useState<'open' | 'pass' | null>(null);
+  const [passKey, setPassKey] = useState('');
   const cpuCpuCancelRef = useRef(false);
   const cpuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [stats, setStats] = useState({
@@ -110,8 +120,31 @@ function App() {
       });
       setCurrentMatch(1);
       setMessage('対戦開始');
+    } else if (mode === 'online') {
+      setBoard(onlineState.board.length ? onlineState.board : createInitialBoard());
+      setTurn(onlineState.turn);
+      setGameOver(onlineState.gameOver);
+      if (onlineState.waiting) {
+        setMessage('対戦相手を待っています...');
+      } else {
+        setMessage(onlineState.myColor === onlineState.turn ? 'あなたの番です' : '相手の番です');
+      }
     }
   }, [mode]);
+
+  useEffect(() => {
+    if (mode !== 'online') return;
+    if (onlineState.board.length) {
+      setBoard(onlineState.board);
+    }
+    setTurn(onlineState.turn);
+    setGameOver(onlineState.gameOver);
+    if (onlineState.waiting) {
+      setMessage('対戦相手を待っています...');
+    } else if (!onlineState.gameOver) {
+      setMessage(onlineState.myColor === onlineState.turn ? 'あなたの番です' : '相手の番です');
+    }
+  }, [onlineState, mode]);
 
   useEffect(() => {
     if ((mode !== 'pvp' && mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver) return;
@@ -177,6 +210,11 @@ function App() {
 
   const handleClick = (x: number, y: number) => {
     if (gameOver) return;
+    if (mode === 'online') {
+      if (turn !== onlineState.myColor) return;
+      sendOnlineMove(x, y);
+      return;
+    }
     const isPlayerTurn = mode === 'pvp' || (mode === 'cpu' && turn === actualPlayerColor);
     if (isPlayerTurn) {
       const moves = getValidMoves(turn, board);
@@ -247,7 +285,7 @@ function App() {
             <button onClick={() => setMode('cpu-select')}>CPU対戦</button>
             <button onClick={() => setMode('cpu-cpu-select')}>CPU vs CPU</button>
             <button onClick={() => setMode('pvp')}>2人対戦</button>
-            <button onClick={() => alert('オンライン対戦は現在準備中です。')}>オンライン対戦</button>
+            <button onClick={() => setMode('online-select')}>オンライン対戦</button>
           </div>
         </div>
       </div>
@@ -384,6 +422,22 @@ function App() {
     );
   }
 
+  if (mode === 'online-select') {
+    return (
+      <div>
+        <h1>オンライン対戦</h1>
+        <div style={{ marginTop: 16 }}>
+          <button onClick={() => { setMatchMode('open'); connectOnline('open'); setMode('online'); }}>誰とでも対戦</button>
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <input value={passKey} onChange={e => setPassKey(e.target.value)} placeholder="合言葉" />
+          <button onClick={() => { setMatchMode('pass'); connectOnline('pass', passKey); setMode('online'); }} style={{ marginLeft: 8 }}>合言葉で対戦</button>
+        </div>
+        <button onClick={() => setMode('title')} style={{ marginTop: 16 }}>戻る</button>
+      </div>
+    );
+  }
+
   if (mode === 'cpu-cpu-result') {
     const cpuNames = `${AI_CONFIG[cpu1Level]?.name} vs ${AI_CONFIG[cpu2Level]?.name}`;
     const summary = `CPU対CPU対戦結果（${stats.games}戦）  ${new Date().toLocaleString()}
@@ -428,12 +482,14 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
     );
   }
 
-  if (mode === 'cpu' || mode === 'pvp' || mode === 'cpu-cpu') {
+  if (mode === 'cpu' || mode === 'pvp' || mode === 'cpu-cpu' || mode === 'online') {
     return (
       <div>
         <h1>オセロ</h1>
         <p style={{ fontWeight: 'bold' }}>
-          {mode === 'pvp'
+          {mode === 'online'
+            ? 'オンライン対戦'
+            : mode === 'pvp'
             ? '2人対戦'
             : mode === 'cpu'
             ? `VS CPU（${AI_CONFIG[cpuLevel]?.name}）`
@@ -442,9 +498,16 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
         <p>{message}</p>
         <button
-          onClick={() =>
-            mode === 'cpu-cpu' ? abortCpuCpu('title') : setMode('title')
-          }
+          onClick={() => {
+            if (mode === 'cpu-cpu') {
+              abortCpuCpu('title');
+            } else if (mode === 'online') {
+              disconnectOnline();
+              setMode('title');
+            } else {
+              setMode('title');
+            }
+          }}
         >
           タイトルに戻る
         </button>
@@ -454,6 +517,11 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         {mode === 'cpu-cpu' && (
           <button onClick={() => abortCpuCpu()} style={{ marginLeft: 8 }}>
             中止
+          </button>
+        )}
+        {mode === 'online' && (
+          <button onClick={() => disconnectOnline()} style={{ marginLeft: 8 }}>
+            切断
           </button>
         )}
       </div>
