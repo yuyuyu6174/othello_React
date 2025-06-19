@@ -322,6 +322,9 @@ function App() {
               )}
             </select>
           </label>
+          <div style={{ fontSize: '0.9em', color: '#666', marginTop: 4 }}>
+            {AI_CONFIG[cpu1Level]?.comment}
+          </div>
           <div style={{ marginTop: 8 }}>
             CPU2 レベル：
             <select
@@ -337,6 +340,9 @@ function App() {
                 ) : null
               )}
             </select>
+            <div style={{ fontSize: '0.9em', color: '#666', marginTop: 4 }}>
+              {AI_CONFIG[cpu2Level]?.comment}
+            </div>
           </div>
           <div style={{ marginTop: 8 }}>
             <label>
