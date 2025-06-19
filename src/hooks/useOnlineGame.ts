@@ -23,7 +23,7 @@ export function useOnlineGame() {
   const [error, setError] = useState<string | null>(null);
 
   const connect = (type: MatchType, pass?: string) => {
-    const ws = new WebSocket('wss://example.com/othello');
+    const ws = new WebSocket('ws://localhost:8080');
     socketRef.current = ws;
     ws.onopen = () => {
       ws.send(
