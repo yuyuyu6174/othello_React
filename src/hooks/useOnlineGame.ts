@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getValidMoves } from '../logic/game';
 import type { Cell } from '../types';
 
 export type MatchType = 'open' | 'pass';
@@ -9,6 +10,7 @@ export interface OnlineState {
   myColor: 1 | 2 | null;
   waiting: boolean;
   gameOver: boolean;
+  validMoves: { x: number; y: number; flips: [number, number][] }[];
 }
 
 const SERVER_URL =
@@ -23,6 +25,7 @@ export function useOnlineGame() {
     myColor: null,
     waiting: false,
     gameOver: false,
+    validMoves: [],
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -45,13 +48,24 @@ export function useOnlineGame() {
             myColor: msg.color,
             waiting: false,
             gameOver: false,
+            validMoves: getValidMoves(msg.turn, msg.board),
           });
           break;
         case 'update':
-          setState(s => ({ ...s, board: msg.board, turn: msg.turn }));
+          setState(s => ({
+            ...s,
+            board: msg.board,
+            turn: msg.turn,
+            validMoves: getValidMoves(msg.turn, msg.board),
+          }));
           break;
         case 'end':
-          setState(s => ({ ...s, board: msg.board, gameOver: true }));
+          setState(s => ({
+            ...s,
+            board: msg.board,
+            gameOver: true,
+            validMoves: [],
+          }));
           break;
         case 'error':
           setError(msg.message || 'error');
@@ -59,7 +73,11 @@ export function useOnlineGame() {
       }
     };
     ws.onclose = () => {
-      setState(s => ({ ...s, waiting: false }));
+      setState(s => ({
+        ...s,
+        waiting: false,
+        validMoves: [],
+      }));
     };
     ws.onerror = () => {
       setError('connection error');
@@ -75,7 +93,11 @@ export function useOnlineGame() {
   const disconnect = () => {
     socketRef.current?.close();
     socketRef.current = null;
-    setState(s => ({ ...s, waiting: false }));
+    setState(s => ({
+      ...s,
+      waiting: false,
+      validMoves: [],
+    }));
   };
 
   useEffect(() => {
