@@ -29,15 +29,18 @@ export function useOnlineGame() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  const computeNext = (board: Cell[][], turn: 1 | 2) => {
+  const computeNext = (
+    board: Cell[][],
+    turn: 1 | 2
+  ): { moves: { x: number; y: number; flips: [number, number][] }[]; over: boolean } => {
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) {
       const opp = getValidMoves(3 - turn as 1 | 2, board);
       if (opp.length === 0) {
-        return { moves: [], over: true } as const;
+        return { moves: [], over: true };
       }
     }
-    return { moves, over: false } as const;
+    return { moves, over: false };
   };
 
   const connect = (type: MatchType, pass?: string) => {
