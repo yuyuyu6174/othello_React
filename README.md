@@ -36,6 +36,6 @@ npm run dev
 ```
 
 オンライン対戦機能では公開 WebSocket サーバー
-`wss://othello-server-1lz5.onrender.com/othello` を利用します。
-環境変数 `VITE_ONLINE_SERVER_URL` を設定することで接続先を変更できます。
+`wss://othello-server-11z5.onrender.com/othello` を利用します。
+接続先は環境変数 `VITE_ONLINE_SERVER_URL` で上書き可能です（例: `ws://localhost:10000/othello`）。
 ローカルでサーバーを立てる必要はありません。

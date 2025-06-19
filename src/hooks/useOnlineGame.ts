@@ -13,7 +13,7 @@ export interface OnlineState {
 
 const SERVER_URL =
   import.meta.env.VITE_ONLINE_SERVER_URL ??
-  'wss://othello-server-1lz5.onrender.com/othello';
+  'wss://othello-server-11z5.onrender.com/othello';
 
 export function useOnlineGame() {
   const socketRef = useRef<WebSocket | null>(null);
