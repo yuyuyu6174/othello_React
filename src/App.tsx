@@ -426,11 +426,30 @@ function App() {
       <div>
         <h1>オンライン対戦</h1>
         <div style={{ marginTop: 16 }}>
-          <button onClick={() => { connectOnline('open'); setMode('online'); }}>誰とでも対戦</button>
+          <button
+            onClick={() => {
+              connectOnline('open');
+              setMode('online');
+            }}
+          >
+            誰とでも対戦
+          </button>
         </div>
         <div style={{ marginTop: 16 }}>
-          <input value={passKey} onChange={e => setPassKey(e.target.value)} placeholder="合言葉" />
-          <button onClick={() => { connectOnline('pass', passKey); setMode('online'); }} style={{ marginLeft: 8 }}>合言葉で対戦</button>
+          <input
+            value={passKey}
+            onChange={(e) => setPassKey(e.target.value)}
+            placeholder="合言葉"
+          />
+          <button
+            onClick={() => {
+              connectOnline('pass', passKey);
+              setMode('online');
+            }}
+            style={{ marginLeft: 8 }}
+          >
+            合言葉で対戦
+          </button>
         </div>
         <button onClick={() => setMode('title')} style={{ marginTop: 16 }}>戻る</button>
       </div>
@@ -476,6 +495,23 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         </button>
         <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>
           タイトルに戻る
+        </button>
+      </div>
+    );
+  }
+
+  if (mode === 'online' && onlineState.waiting) {
+    return (
+      <div>
+        <h1>マッチング中...</h1>
+        <p>対戦相手を待っています</p>
+        <button
+          onClick={() => {
+            disconnectOnline();
+            setMode('online-select');
+          }}
+        >
+          キャンセル
         </button>
       </div>
     );
