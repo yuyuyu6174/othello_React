@@ -50,7 +50,6 @@ function App() {
     sendMove: sendOnlineMove,
     disconnect: disconnectOnline,
   } = useOnlineGame();
-  const [matchMode, setMatchMode] = useState<'open' | 'pass' | null>(null);
   const [passKey, setPassKey] = useState('');
   const cpuCpuCancelRef = useRef(false);
   const cpuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -427,11 +426,11 @@ function App() {
       <div>
         <h1>オンライン対戦</h1>
         <div style={{ marginTop: 16 }}>
-          <button onClick={() => { setMatchMode('open'); connectOnline('open'); setMode('online'); }}>誰とでも対戦</button>
+          <button onClick={() => { connectOnline('open'); setMode('online'); }}>誰とでも対戦</button>
         </div>
         <div style={{ marginTop: 16 }}>
           <input value={passKey} onChange={e => setPassKey(e.target.value)} placeholder="合言葉" />
-          <button onClick={() => { setMatchMode('pass'); connectOnline('pass', passKey); setMode('online'); }} style={{ marginLeft: 8 }}>合言葉で対戦</button>
+          <button onClick={() => { connectOnline('pass', passKey); setMode('online'); }} style={{ marginLeft: 8 }}>合言葉で対戦</button>
         </div>
         <button onClick={() => setMode('title')} style={{ marginTop: 16 }}>戻る</button>
       </div>
