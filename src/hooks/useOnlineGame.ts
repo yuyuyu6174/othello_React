@@ -175,7 +175,18 @@ export function useOnlineGame() {
 
   const reconnect = () => {
     if (lastMatch.current) {
-      disconnect();
+      // Clear board immediately so the previous game isn't visible
+      setState({
+        board: [],
+        turn: 1,
+        myColor: null,
+        waiting: true,
+        gameOver: false,
+        validMoves: [],
+        surrendered: null,
+      });
+      socketRef.current?.close();
+      socketRef.current = null;
       connect(lastMatch.current.type, lastMatch.current.pass);
     }
   };
