@@ -20,6 +20,7 @@ const SERVER_URL =
 
 export function useOnlineGame() {
   const socketRef = useRef<WebSocket | null>(null);
+  const ignoreCloseRef = useRef(false);
   const lastMatch = useRef<{ type: MatchType; pass?: string } | null>(null);
   const [state, setState] = useState<OnlineState>({
     board: [],
@@ -112,6 +113,10 @@ export function useOnlineGame() {
       }
     };
     ws.onclose = () => {
+      if (ignoreCloseRef.current) {
+        ignoreCloseRef.current = false;
+        return;
+      }
       setState(s => {
         const next = computeNext(s.board, s.turn);
         return {
@@ -138,6 +143,7 @@ export function useOnlineGame() {
     const ws = socketRef.current;
     if (ws) {
       ws.send(JSON.stringify({ type: 'giveup' }));
+      ignoreCloseRef.current = true;
       ws.close();
     }
     socketRef.current = null;
@@ -151,7 +157,10 @@ export function useOnlineGame() {
   };
 
   const disconnect = (reset = false) => {
-    socketRef.current?.close();
+    if (socketRef.current) {
+      ignoreCloseRef.current = true;
+      socketRef.current.close();
+    }
     socketRef.current = null;
     if (reset) {
       lastMatch.current = null;
@@ -185,7 +194,10 @@ export function useOnlineGame() {
         validMoves: [],
         surrendered: null,
       });
-      socketRef.current?.close();
+      if (socketRef.current) {
+        ignoreCloseRef.current = true;
+        socketRef.current.close();
+      }
       socketRef.current = null;
       connect(lastMatch.current.type, lastMatch.current.pass);
     }
@@ -193,7 +205,10 @@ export function useOnlineGame() {
 
   useEffect(() => {
     return () => {
-      socketRef.current?.close();
+      if (socketRef.current) {
+        ignoreCloseRef.current = true;
+        socketRef.current.close();
+      }
     };
   }, []);
 
