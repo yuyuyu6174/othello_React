@@ -11,6 +11,7 @@ export interface OnlineState {
   waiting: boolean;
   gameOver: boolean;
   validMoves: { x: number; y: number; flips: [number, number][] }[];
+  surrendered: 'me' | 'opponent' | null;
 }
 
 const SERVER_URL =
@@ -27,6 +28,7 @@ export function useOnlineGame() {
     waiting: false,
     gameOver: false,
     validMoves: [],
+    surrendered: null,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +59,7 @@ export function useOnlineGame() {
       waiting: true,
       gameOver: false,
       validMoves: [],
+      surrendered: null,
     });
     const ws = new WebSocket(SERVER_URL);
     socketRef.current = ws;
@@ -75,6 +78,7 @@ export function useOnlineGame() {
             waiting: false,
             gameOver: next.over,
             validMoves: next.moves,
+            surrendered: null,
           });
           break;
         }
@@ -95,6 +99,7 @@ export function useOnlineGame() {
             board: msg.board,
             gameOver: true,
             validMoves: [],
+            surrendered: s.surrendered,
           }));
           break;
         case 'error':
@@ -110,6 +115,7 @@ export function useOnlineGame() {
           waiting: false,
           gameOver: s.gameOver || next.over,
           validMoves: [],
+          surrendered: s.surrendered,
         };
       });
     };
@@ -124,6 +130,22 @@ export function useOnlineGame() {
     ws.send(JSON.stringify({ type: 'move', x, y }));
   };
 
+  const giveUp = () => {
+    const ws = socketRef.current;
+    if (ws) {
+      ws.send(JSON.stringify({ type: 'giveup' }));
+      ws.close();
+    }
+    socketRef.current = null;
+    setState(s => ({
+      ...s,
+      waiting: false,
+      gameOver: true,
+      validMoves: [],
+      surrendered: 'me',
+    }));
+  };
+
   const disconnect = (reset = false) => {
     socketRef.current?.close();
     socketRef.current = null;
@@ -136,6 +158,7 @@ export function useOnlineGame() {
         waiting: false,
         gameOver: false,
         validMoves: [],
+        surrendered: null,
       });
     } else {
       setState(s => ({
@@ -159,5 +182,5 @@ export function useOnlineGame() {
     };
   }, []);
 
-  return { state, error, connect, sendMove, disconnect, reconnect };
+  return { state, error, connect, sendMove, disconnect, reconnect, giveUp };
 }

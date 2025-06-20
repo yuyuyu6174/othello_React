@@ -50,6 +50,7 @@ function App() {
     sendMove: sendOnlineMove,
     disconnect: disconnectOnline,
     reconnect: reconnectOnline,
+    giveUp: giveUpOnline,
   } = useOnlineGame();
   const [passKey, setPassKey] = useState('');
   const cpuCpuCancelRef = useRef(false);
@@ -141,6 +142,10 @@ function App() {
     setGameOver(onlineState.gameOver);
     if (onlineState.waiting) {
       setMessage('対戦相手を待っています...');
+    } else if (onlineState.surrendered === 'me') {
+      setMessage('あなたの負け (降参)');
+    } else if (onlineState.surrendered === 'opponent') {
+      setMessage('相手が降参しました あなたの勝ち！');
     } else if (onlineState.gameOver) {
       const { black, white } = countStones(onlineState.board);
       setMessage(`ゲーム終了！ 黒:${black} 白:${white} → ${black === white ? '引き分け' : black > white ? '黒の勝ち！' : '白の勝ち！'}`);
@@ -535,20 +540,25 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         </p>
         <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
         <p>{message}</p>
-        <button
-          onClick={() => {
-            if (mode === 'cpu-cpu') {
-              abortCpuCpu('title');
-            } else if (mode === 'online') {
-              disconnectOnline(true);
-              setMode('title');
-            } else {
-              setMode('title');
-            }
-          }}
-        >
-          タイトルに戻る
-        </button>
+        {mode === 'online' && !gameOver && (
+          <button onClick={giveUpOnline}>降参</button>
+        )}
+        {(mode !== 'online' || gameOver) && (
+          <button
+            onClick={() => {
+              if (mode === 'cpu-cpu') {
+                abortCpuCpu('title');
+              } else if (mode === 'online') {
+                disconnectOnline(true);
+                setMode('title');
+              } else {
+                setMode('title');
+              }
+            }}
+          >
+            タイトルに戻る
+          </button>
+        )}
         {(mode === 'cpu' || mode === 'pvp') && gameOver && (
           <button onClick={restartGame}>再戦する</button>
         )}
