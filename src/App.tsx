@@ -137,6 +137,8 @@ function App() {
     if (mode !== 'online') return;
     if (onlineState.board.length) {
       setBoard(onlineState.board);
+    } else if (onlineState.waiting) {
+      setBoard(createInitialBoard());
     }
     setTurn(onlineState.turn);
     setGameOver(onlineState.gameOver);
