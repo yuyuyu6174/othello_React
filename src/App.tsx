@@ -568,11 +568,6 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
             中止
           </button>
         )}
-        {mode === 'online' && (
-          <button onClick={() => disconnectOnline()} style={{ marginLeft: 8 }}>
-            切断
-          </button>
-        )}
       </div>
     );
   }
