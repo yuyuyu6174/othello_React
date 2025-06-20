@@ -521,6 +521,14 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
       <div>
         <h1>マッチング中...</h1>
         <p>対戦相手を待っています</p>
+        <button
+          onClick={() => {
+            disconnectOnline(true);
+            setMode('online-select');
+          }}
+        >
+          キャンセル
+        </button>
       </div>
     );
   }
