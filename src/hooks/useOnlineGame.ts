@@ -34,6 +34,10 @@ export function useOnlineGame() {
     board: Cell[][],
     turn: 1 | 2
   ): { moves: { x: number; y: number; flips: [number, number][] }[]; over: boolean } => {
+    if (board.length < 8 || board.some(row => row.length < 8)) {
+      // Not a full board yet (e.g. before connection), so avoid checking moves
+      return { moves: [], over: false };
+    }
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) {
       const opp = getValidMoves(3 - turn as 1 | 2, board);
