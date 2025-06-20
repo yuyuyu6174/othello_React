@@ -518,7 +518,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         <p>対戦相手を待っています</p>
         <button
           onClick={() => {
-            disconnectOnline();
+            disconnectOnline(true);
             setMode('online-select');
           }}
         >
@@ -548,7 +548,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
             if (mode === 'cpu-cpu') {
               abortCpuCpu('title');
             } else if (mode === 'online') {
-              disconnectOnline();
+              disconnectOnline(true);
               setMode('title');
             } else {
               setMode('title');

@@ -120,14 +120,26 @@ export function useOnlineGame() {
     ws.send(JSON.stringify({ type: 'move', x, y }));
   };
 
-  const disconnect = () => {
+  const disconnect = (reset = false) => {
     socketRef.current?.close();
     socketRef.current = null;
-    setState(s => ({
-      ...s,
-      waiting: false,
-      validMoves: [],
-    }));
+    if (reset) {
+      lastMatch.current = null;
+      setState({
+        board: [],
+        turn: 1,
+        myColor: null,
+        waiting: false,
+        gameOver: false,
+        validMoves: [],
+      });
+    } else {
+      setState(s => ({
+        ...s,
+        waiting: false,
+        validMoves: [],
+      }));
+    }
   };
 
   const reconnect = () => {
