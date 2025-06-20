@@ -99,7 +99,11 @@ export function useOnlineGame() {
             board: msg.board,
             gameOver: true,
             validMoves: [],
-            surrendered: s.surrendered,
+            surrendered: msg.surrendered
+              ? msg.surrendered === s.myColor
+                ? 'me'
+                : 'opponent'
+              : s.surrendered,
           }));
           break;
         case 'error':
