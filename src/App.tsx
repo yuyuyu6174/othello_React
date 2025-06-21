@@ -89,6 +89,12 @@ function App() {
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [animations, setAnimations] = useState<BoardAnimation>({ placed: undefined, flips: [] });
   const [animating, setAnimating] = useState(false);
+  const pendingMoveRef = useRef<{
+    move: { x: number; y: number; flips: [number, number][] };
+    elapsed: number;
+    turn: 1 | 2;
+    mode: Mode;
+  } | null>(null);
 
   const startAnimation = (
     placed: { x: number; y: number },
@@ -111,6 +117,30 @@ function App() {
       setAnimating(false);
       animTimerRef.current = null;
     }, flips.length * 100 + 400);
+  };
+
+  const tryApplyPendingMove = () => {
+    const pending = pendingMoveRef.current;
+    if (!pending || animating) return;
+    pendingMoveRef.current = null;
+    const { move, elapsed, turn: moveTurn, mode: moveMode } = pending;
+    setBoard(prev => {
+      const nb = prev.map(row => [...row]);
+      nb[move.y][move.x] = moveTurn;
+      move.flips.forEach(([fx, fy]) => { nb[fy][fx] = moveTurn; });
+      return nb;
+    });
+    startAnimation({ x: move.x, y: move.y }, move.flips);
+    if (moveMode === 'cpu-cpu') {
+      if (moveTurn === 1) {
+        setStats(s => ({ ...s, blackTimeTotal: s.blackTimeTotal + elapsed, blackMoveCount: s.blackMoveCount + 1, turnTotal: s.turnTotal + 1 }));
+      } else {
+        setStats(s => ({ ...s, whiteTimeTotal: s.whiteTimeTotal + elapsed, whiteMoveCount: s.whiteMoveCount + 1, turnTotal: s.turnTotal + 1 }));
+      }
+    }
+    setTurn(3 - moveTurn as 1 | 2);
+    setCpuThinking(false);
+    cpuTimeoutRef.current = null;
   };
 
   const resolvePlayerColor = () => {
@@ -251,7 +281,7 @@ function App() {
   }, [turn, board, gameOver, mode, actualPlayerColor, onlineState.validMoves, animating]);
 
   useEffect(() => {
-    if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking || animating) return;
+    if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking) return;
     if (mode === 'cpu' && turn !== (3 - actualPlayerColor)) return;
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) return;
@@ -263,31 +293,25 @@ function App() {
     const thinking = calculateMove({ board, turn, level }).then(move => ({ move, elapsed: performance.now() - start }));
 
     cpuTimeoutRef.current = setTimeout(async () => {
-      const { move, elapsed } = await thinking;
+      const result = await thinking;
       if (cpuCpuCancelRef.current) {
         setCpuThinking(false);
         cpuTimeoutRef.current = null;
         return;
       }
-      if (!move) return;
-      const newBoard = board.map(row => [...row]);
-      newBoard[move.y][move.x] = turn;
-      move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
-      setBoard(newBoard);
-
-      startAnimation({ x: move.x, y: move.y }, move.flips);
-      if (mode === 'cpu-cpu') {
-        if (turn === 1) {
-          setStats(s => ({ ...s, blackTimeTotal: s.blackTimeTotal + elapsed, blackMoveCount: s.blackMoveCount + 1, turnTotal: s.turnTotal + 1 }));
-        } else {
-          setStats(s => ({ ...s, whiteTimeTotal: s.whiteTimeTotal + elapsed, whiteMoveCount: s.whiteMoveCount + 1, turnTotal: s.turnTotal + 1 }));
-        }
+      if (!result.move) {
+        setCpuThinking(false);
+        cpuTimeoutRef.current = null;
+        return;
       }
-      setTurn(3 - turn as 1 | 2);
-      setCpuThinking(false);
-      cpuTimeoutRef.current = null;
+      pendingMoveRef.current = { move: result.move, elapsed: result.elapsed, turn, mode };
+      tryApplyPendingMove();
     }, TIMING_CONFIG.cpuDelayMs);
-  }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking, animating]);
+  }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking]);
+
+  useEffect(() => {
+    tryApplyPendingMove();
+  }, [animating]);
 
   const handleClick = (x: number, y: number) => {
     if (gameOver || animating) return;
