@@ -251,7 +251,7 @@ function App() {
   }, [turn, board, gameOver, mode, actualPlayerColor, onlineState.validMoves, animating]);
 
   useEffect(() => {
-    if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking || animating) return;
+    if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking) return;
     if (mode === 'cpu' && turn !== (3 - actualPlayerColor)) return;
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) return;
