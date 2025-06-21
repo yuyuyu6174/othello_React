@@ -287,6 +287,15 @@ function App() {
     if (gameOver || animating) return;
     if (mode === 'online') {
       if (turn !== onlineState.myColor) return;
+      const move = onlineState.validMoves.find(m => m.x === x && m.y === y);
+      if (!move) return;
+      const newBoard = board.map(row => [...row]);
+      newBoard[y][x] = turn;
+      move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
+      setBoard(newBoard);
+      prevOnlineBoardRef.current = newBoard.map(row => [...row]);
+      startAnimation({ x, y }, move.flips);
+      setTurn(3 - turn as 1 | 2);
       sendOnlineMove(x, y);
       return;
     }
