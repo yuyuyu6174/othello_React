@@ -96,6 +96,12 @@ function App() {
     flipsRaw: [number, number][]
   ) => {
     if (mode === 'cpu-cpu' && !cpuMotion) {
+      if (animTimerRef.current) {
+        clearTimeout(animTimerRef.current);
+        animTimerRef.current = null;
+      }
+      setAnimations({ placed: undefined, flips: [] });
+      setAnimating(false);
       setValidMoves([]);
       return;
     }
@@ -130,6 +136,13 @@ function App() {
       const resolved = resolvePlayerColor();
       setActualPlayerColor(resolved);
       randomRef.current = playerColor === 'random';
+      if (animTimerRef.current) {
+        clearTimeout(animTimerRef.current);
+        animTimerRef.current = null;
+      }
+      setAnimations({ placed: undefined, flips: [] });
+      setAnimating(false);
+      setCpuMotion(true);
       setBoard(createInitialBoard());
       setTurn(1);
       setGameOver(false);
