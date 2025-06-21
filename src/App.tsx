@@ -99,6 +99,7 @@ function App() {
       animTimerRef.current = null;
       setAnimations({ placed: undefined, flips: [] });
     }
+    setValidMoves([]); // hide hints during animation
     const flips = flipsRaw
       .map(([fx, fy]) => ({ x: fx, y: fy, dist: Math.abs(fx - placed.x) + Math.abs(fy - placed.y) }))
       .sort((a, b) => a.dist - b.dist)
