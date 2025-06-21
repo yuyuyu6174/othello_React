@@ -86,6 +86,23 @@ function App() {
   const [cpuThinking, setCpuThinking] = useState(false);
   const randomRef = useRef<boolean>(false);
   const [animations, setAnimations] = useState<BoardAnimation>({ placed: undefined, flips: [] });
+  const [animating, setAnimating] = useState(false);
+
+  const startAnimation = (
+    placed: { x: number; y: number },
+    flipsRaw: [number, number][]
+  ) => {
+    const flips = flipsRaw
+      .map(([fx, fy]) => ({ x: fx, y: fy, dist: Math.abs(fx - placed.x) + Math.abs(fy - placed.y) }))
+      .sort((a, b) => a.dist - b.dist)
+      .map((c, idx) => ({ x: c.x, y: c.y, delay: idx * 100 }));
+    setAnimations({ placed, flips });
+    setAnimating(true);
+    setTimeout(() => {
+      setAnimations({ placed: undefined, flips: [] });
+      setAnimating(false);
+    }, flips.length * 100 + 400);
+  };
 
   const resolvePlayerColor = () => {
     return playerColor === 'random'
@@ -201,7 +218,7 @@ function App() {
   }, [turn, board, gameOver, mode, actualPlayerColor, onlineState.validMoves]);
 
   useEffect(() => {
-    if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking) return;
+    if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking || animating) return;
     if (mode === 'cpu' && turn !== (3 - actualPlayerColor)) return;
     const moves = getValidMoves(turn, board);
     if (moves.length === 0) return;
@@ -225,12 +242,7 @@ function App() {
       move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
       setBoard(newBoard);
 
-      const flips = move.flips
-        .map(([fx, fy]) => ({ x: fx, y: fy, dist: Math.abs(fx - move.x) + Math.abs(fy - move.y) }))
-        .sort((a, b) => a.dist - b.dist)
-        .map((c, idx) => ({ x: c.x, y: c.y, delay: idx * 100 }));
-      setAnimations({ placed: { x: move.x, y: move.y }, flips });
-      setTimeout(() => setAnimations({ placed: undefined, flips: [] }), flips.length * 100 + 400);
+      startAnimation({ x: move.x, y: move.y }, move.flips);
       if (mode === 'cpu-cpu') {
         if (turn === 1) {
           setStats(s => ({ ...s, blackTimeTotal: s.blackTimeTotal + elapsed, blackMoveCount: s.blackMoveCount + 1, turnTotal: s.turnTotal + 1 }));
@@ -242,10 +254,10 @@ function App() {
       setCpuThinking(false);
       cpuTimeoutRef.current = null;
     }, TIMING_CONFIG.cpuDelayMs);
-  }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking]);
+  }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking, animating]);
 
   const handleClick = (x: number, y: number) => {
-    if (gameOver) return;
+    if (gameOver || animating) return;
     if (mode === 'online') {
       if (turn !== onlineState.myColor) return;
       sendOnlineMove(x, y);
@@ -261,12 +273,7 @@ function App() {
       move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
       setBoard(newBoard);
 
-      const flips = move.flips
-        .map(([fx, fy]) => ({ x: fx, y: fy, dist: Math.abs(fx - x) + Math.abs(fy - y) }))
-        .sort((a, b) => a.dist - b.dist)
-        .map((c, idx) => ({ x: c.x, y: c.y, delay: idx * 100 }));
-      setAnimations({ placed: { x, y }, flips });
-      setTimeout(() => setAnimations({ placed: undefined, flips: [] }), flips.length * 100 + 400);
+      startAnimation({ x, y }, move.flips);
 
       setTurn(3 - turn as 1 | 2);
     }
@@ -587,6 +594,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
           validMoves={gameOver ? [] : validMoves}
           onCellClick={handleClick}
           animations={animations}
+          disabled={animating}
         />
         <p id="score-board">黒:{blackCount} 白:{whiteCount}</p>
         <p>{message}</p>

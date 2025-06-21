@@ -18,11 +18,12 @@ interface BoardProps {
   validMoves: { x: number; y: number }[];
   onCellClick: (x: number, y: number) => void;
   animations?: BoardAnimation;
+  disabled?: boolean;
 }
 
-const Board: React.FC<BoardProps> = ({ board, validMoves, onCellClick, animations }) => {
+const Board: React.FC<BoardProps> = ({ board, validMoves, onCellClick, animations, disabled }) => {
   return (
-    <table id="board">
+    <table id="board" style={{ pointerEvents: disabled ? 'none' : 'auto' }}>
       <tbody>
         {board.map((row, y) => (
           <tr key={y}>
