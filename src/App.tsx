@@ -542,6 +542,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
   }
 
   if (mode === 'cpu' || mode === 'pvp' || mode === 'cpu-cpu' || mode === 'online') {
+    const { black: blackCount, white: whiteCount } = countStones(board);
     return (
       <div>
         <h1>オセロ</h1>
@@ -555,6 +556,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
             : `CPU vs CPU ${currentMatch}/${numMatches}（${AI_CONFIG[cpu1Level]?.name} vs ${AI_CONFIG[cpu2Level]?.name}）`}
         </p>
         <Board board={board} validMoves={gameOver ? [] : validMoves} onCellClick={handleClick} />
+        <p id="score-board">黒:{blackCount} 白:{whiteCount}</p>
         <p>{message}</p>
         {mode === 'online' && !gameOver && (
           <button onClick={giveUpOnline}>降参</button>
