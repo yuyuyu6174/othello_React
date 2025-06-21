@@ -86,6 +86,7 @@ function App() {
   const [cpuThinking, setCpuThinking] = useState(false);
   const randomRef = useRef<boolean>(false);
   const prevOnlineBoardRef = useRef<Cell[][]>([]);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [animations, setAnimations] = useState<BoardAnimation>({ placed: undefined, flips: [] });
   const [animating, setAnimating] = useState(false);
 
@@ -93,15 +94,19 @@ function App() {
     placed: { x: number; y: number },
     flipsRaw: [number, number][]
   ) => {
+    if (animTimerRef.current) {
+      clearTimeout(animTimerRef.current);
+    }
     const flips = flipsRaw
       .map(([fx, fy]) => ({ x: fx, y: fy, dist: Math.abs(fx - placed.x) + Math.abs(fy - placed.y) }))
       .sort((a, b) => a.dist - b.dist)
       .map((c, idx) => ({ x: c.x, y: c.y, delay: idx * 100 }));
     setAnimations({ placed, flips });
     setAnimating(true);
-    setTimeout(() => {
+    animTimerRef.current = setTimeout(() => {
       setAnimations({ placed: undefined, flips: [] });
       setAnimating(false);
+      animTimerRef.current = null;
     }, flips.length * 100 + 400);
   };
 
@@ -154,7 +159,7 @@ function App() {
     } else if (mode === 'online') {
       const initial = onlineState.board.length ? onlineState.board : createInitialBoard();
       setBoard(initial);
-      prevOnlineBoardRef.current = initial;
+      prevOnlineBoardRef.current = initial.map(row => [...row]);
       setTurn(onlineState.turn);
       setGameOver(onlineState.gameOver);
       if (onlineState.waiting) {
@@ -188,7 +193,7 @@ function App() {
       if (placed) startAnimation(placed, flips);
     }
     setBoard(newBoard);
-    prevOnlineBoardRef.current = newBoard;
+    prevOnlineBoardRef.current = newBoard.map(row => [...row]);
     setTurn(onlineState.turn);
     setGameOver(onlineState.gameOver);
     if (onlineState.waiting) {
