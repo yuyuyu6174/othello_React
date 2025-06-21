@@ -96,6 +96,8 @@ function App() {
   ) => {
     if (animTimerRef.current) {
       clearTimeout(animTimerRef.current);
+      animTimerRef.current = null;
+      setAnimations({ placed: undefined, flips: [] });
     }
     const flips = flipsRaw
       .map(([fx, fy]) => ({ x: fx, y: fy, dist: Math.abs(fx - placed.x) + Math.abs(fy - placed.y) }))
