@@ -573,15 +573,20 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
                 setMode('title');
               }
             }}
+            style={{ width: 200 }}
           >
             タイトルに戻る
           </button>
         )}
         {(mode === 'cpu' || mode === 'pvp') && gameOver && (
-          <button onClick={restartGame}>再戦する</button>
+          <button onClick={restartGame} style={{ marginLeft: 8, width: 200 }}>
+            再戦する
+          </button>
         )}
         {mode === 'online' && gameOver && (
-          <button onClick={reconnectOnline}>再戦する</button>
+          <button onClick={reconnectOnline} style={{ marginLeft: 8, width: 200 }}>
+            再戦する
+          </button>
         )}
         {mode === 'cpu-cpu' && (
           <button onClick={() => abortCpuCpu()} style={{ marginLeft: 8 }}>
