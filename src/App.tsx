@@ -216,6 +216,11 @@ function App() {
   useEffect(() => {
     if (gameOver) return;
 
+    if (animating) {
+      setValidMoves([]);
+      return;
+    }
+
     if (mode === 'online') {
       setValidMoves(onlineState.validMoves);
       return;
@@ -243,7 +248,7 @@ function App() {
         setMessage(`${turn === 1 ? "黒" : "白"}の番です`);
       }
     }
-  }, [turn, board, gameOver, mode, actualPlayerColor, onlineState.validMoves]);
+  }, [turn, board, gameOver, mode, actualPlayerColor, onlineState.validMoves, animating]);
 
   useEffect(() => {
     if ((mode !== 'cpu' && mode !== 'cpu-cpu') || gameOver || cpuThinking || animating) return;
