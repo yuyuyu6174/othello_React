@@ -53,6 +53,7 @@ function App() {
   const [cpu1Color, setCpu1Color] = useState<'black' | 'white'>('black');
   const [cpuDelay, setCpuDelay] = useState(TIMING_CONFIG.cpuDelayMs);
   const [numMatches, setNumMatches] = useState(1);
+  const [cpuMotion, setCpuMotion] = useState(true);
   const [currentMatch, setCurrentMatch] = useState(0);
   const [cpu1ActualColor, setCpu1ActualColor] = useState<1 | 2>(1);
   const {
@@ -94,6 +95,16 @@ function App() {
     placed: { x: number; y: number },
     flipsRaw: [number, number][]
   ) => {
+    if (mode === 'cpu-cpu' && !cpuMotion) {
+      if (animTimerRef.current) {
+        clearTimeout(animTimerRef.current);
+        animTimerRef.current = null;
+      }
+      setAnimations({ placed: undefined, flips: [] });
+      setAnimating(false);
+      setValidMoves([]);
+      return;
+    }
     if (animTimerRef.current) {
       clearTimeout(animTimerRef.current);
       animTimerRef.current = null;
@@ -125,6 +136,13 @@ function App() {
       const resolved = resolvePlayerColor();
       setActualPlayerColor(resolved);
       randomRef.current = playerColor === 'random';
+      if (animTimerRef.current) {
+        clearTimeout(animTimerRef.current);
+        animTimerRef.current = null;
+      }
+      setAnimations({ placed: undefined, flips: [] });
+      setAnimating(false);
+      setCpuMotion(true);
       setBoard(createInitialBoard());
       setTurn(1);
       setGameOver(false);
@@ -140,6 +158,7 @@ function App() {
       setBoard(createInitialBoard());
       setTurn(1);
       setGameOver(false);
+      setAnimations({ placed: undefined, flips: [] });
       cpuCpuCancelRef.current = false;
       if (cpuTimeoutRef.current) {
         clearTimeout(cpuTimeoutRef.current);
@@ -508,6 +527,17 @@ function App() {
                 min={1}
                 value={numMatches}
                 onChange={(e) => setNumMatches(Number(e.target.value))}
+                style={{ marginLeft: 8 }}
+              />
+            </label>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>
+              モーション表示：
+              <input
+                type="checkbox"
+                checked={cpuMotion}
+                onChange={(e) => setCpuMotion(e.target.checked)}
                 style={{ marginLeft: 8 }}
               />
             </label>
