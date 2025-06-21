@@ -85,6 +85,7 @@ function App() {
   const [message, setMessage] = useState('');
   const [cpuThinking, setCpuThinking] = useState(false);
   const randomRef = useRef<boolean>(false);
+  const prevOnlineBoardRef = useRef<Cell[][]>([]);
   const [animations, setAnimations] = useState<BoardAnimation>({ placed: undefined, flips: [] });
   const [animating, setAnimating] = useState(false);
 
@@ -151,7 +152,9 @@ function App() {
       setCurrentMatch(1);
       setMessage('対戦開始');
     } else if (mode === 'online') {
-      setBoard(onlineState.board.length ? onlineState.board : createInitialBoard());
+      const initial = onlineState.board.length ? onlineState.board : createInitialBoard();
+      setBoard(initial);
+      prevOnlineBoardRef.current = initial;
       setTurn(onlineState.turn);
       setGameOver(onlineState.gameOver);
       if (onlineState.waiting) {
@@ -164,11 +167,28 @@ function App() {
 
   useEffect(() => {
     if (mode !== 'online') return;
-    if (onlineState.board.length) {
-      setBoard(onlineState.board);
-    } else if (onlineState.waiting) {
-      setBoard(createInitialBoard());
+    const newBoard = onlineState.board.length ? onlineState.board : createInitialBoard();
+    if (prevOnlineBoardRef.current.length === SIZE && newBoard.length === SIZE) {
+      const lastTurn = 3 - onlineState.turn as 1 | 2;
+      let placed: { x: number; y: number } | null = null;
+      const flips: [number, number][] = [];
+      for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+          const prev = prevOnlineBoardRef.current[y][x];
+          const cur = newBoard[y][x];
+          if (prev !== cur) {
+            if (prev === 0 && cur === lastTurn) {
+              placed = { x, y };
+            } else if (cur === lastTurn) {
+              flips.push([x, y]);
+            }
+          }
+        }
+      }
+      if (placed) startAnimation(placed, flips);
     }
+    setBoard(newBoard);
+    prevOnlineBoardRef.current = newBoard;
     setTurn(onlineState.turn);
     setGameOver(onlineState.gameOver);
     if (onlineState.waiting) {
