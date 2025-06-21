@@ -99,3 +99,10 @@ td {
   font-size: 18px;
   margin-top: 20px;
 }
+
+#score-board {
+  font-size: 18px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
