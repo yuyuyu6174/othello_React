@@ -66,6 +66,9 @@ td {
   border: 1px solid #333;
   background-color: green;
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .piece {
@@ -73,7 +76,6 @@ td {
   height: 80%;
   border-radius: 50%;
   margin: auto;
-  margin-top: 10%;
   transform-style: preserve-3d;
 }
 
