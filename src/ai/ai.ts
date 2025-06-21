@@ -6,6 +6,15 @@ const transpositionTable = new Map<string, number>();
 // transposition table for endgame solver
 const endgameTranspositionTable = new Map<string, number>();
 
+// more efficient board hashing than JSON.stringify
+function hashBoard(board: number[][]): string {
+  let key = '';
+  for (let i = 0; i < board.length; i++) {
+    key += board[i].join('');
+  }
+  return key;
+}
+
 export function cpuMove(
   board: number[][],
   turn: 1 | 2,
@@ -87,7 +96,7 @@ function minimax(
   evalFunc: (b: number[][]) => number,
   config: any
 ): number {
-  const key = JSON.stringify(board) + color + depth;
+  const key = hashBoard(board) + color + depth;
   if (transpositionTable.has(key)) return transpositionTable.get(key)!;
 
   const moves = getAllValidMoves(color, board);
@@ -198,7 +207,7 @@ function fullSearch(
   alpha: number = -Infinity,
   beta: number = Infinity
 ): number {
-  const key = JSON.stringify(board) + color;
+  const key = hashBoard(board) + color;
   if (endgameTranspositionTable.has(key)) return endgameTranspositionTable.get(key)!;
 
   const moves = getAllValidMoves(color, board);
