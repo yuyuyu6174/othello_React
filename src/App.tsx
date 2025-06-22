@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import Board from './components/Board';
+import BoardComponent from './components/Board';
 import './style.css';
 import { getValidMoves, countStones, index } from './logic/game';
 import { AI_CONFIG, TIMING_CONFIG } from './ai/config';
 import { useCpuWorker } from './hooks/useCpuWorker';
 import { useOnlineGame } from './hooks/useOnlineGame';
-import type { Cell, Board } from './types';
+import type { Board as BoardState } from './types';
 
 const DEFAULT_CPU_DELAY_MS = TIMING_CONFIG.cpuDelayMs;
 
@@ -34,8 +34,8 @@ type Mode =
   | 'cpu-cpu-result';
 
 function App() {
-  const createInitialBoard = (): Board => {
-    const b = new Uint8Array(SIZE * SIZE) as Board;
+  const createInitialBoard = (): BoardState => {
+    const b = new Uint8Array(SIZE * SIZE) as BoardState;
     b[index(3,3)] = 2; b[index(4,3)] = 1;
     b[index(3,4)] = 1; b[index(4,4)] = 2;
     return b;
@@ -78,14 +78,14 @@ function App() {
     whiteMoveCount: 0,
     turnTotal: 0,
   });
-  const [board, setBoard] = useState<Board>(createInitialBoard);
+  const [board, setBoard] = useState<BoardState>(createInitialBoard);
   const [turn, setTurn] = useState<1 | 2>(1);
   const [validMoves, setValidMoves] = useState<{ x: number; y: number; flips: [number, number][] }[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [message, setMessage] = useState('');
   const [cpuThinking, setCpuThinking] = useState(false);
   const randomRef = useRef<boolean>(false);
-  const prevOnlineBoardRef = useRef<Board>(new Uint8Array());
+  const prevOnlineBoardRef = useRef<BoardState>(new Uint8Array());
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animEndRef = useRef(Date.now());
   const [animations, setAnimations] = useState<BoardAnimation>({ placed: undefined, flips: [] });
@@ -637,7 +637,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
             ? `VS CPU（${AI_CONFIG[cpuLevel]?.name}）`
             : `CPU vs CPU ${currentMatch}/${numMatches}（${AI_CONFIG[cpu1Level]?.name} vs ${AI_CONFIG[cpu2Level]?.name}）`}
         </p>
-        <Board
+        <BoardComponent
           board={board}
           validMoves={gameOver ? [] : validMoves}
           onCellClick={handleClick}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getValidMoves, index, SIZE } from '../logic/game';
+import { getValidMoves, SIZE } from '../logic/game';
 import type { Board } from '../types';
 
 export type MatchType = 'open' | 'pass';

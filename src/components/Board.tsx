@@ -1,6 +1,5 @@
-// import React from 'react';
-
-import type { Board, Cell } from '../types';
+import type { FC } from 'react';
+import type { Board } from '../types';
 
 interface FlipAnim {
   x: number;
@@ -21,7 +20,7 @@ interface BoardProps {
   disabled?: boolean;
 }
 
-const Board: React.FC<BoardProps> = ({ board, validMoves, onCellClick, animations, disabled }) => {
+const Board: FC<BoardProps> = ({ board, validMoves, onCellClick, animations, disabled }) => {
   return (
     <table id="board" style={{ pointerEvents: disabled ? 'none' : 'auto' }}>
       <tbody>

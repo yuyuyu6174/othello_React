@@ -1,5 +1,5 @@
 import { AI_CONFIG, DEFAULT_AI_CONFIG, WHITE, BLACK } from './config';
-import { getAllValidMoves, simulateMove, countStones, applyMove, undoMove, Undo, index } from '../logic/game';
+import { getAllValidMoves, simulateMove, countStones, applyMove, undoMove } from '../logic/game';
 import type { Board } from '../types';
 
 // transposition table (for minimax)
