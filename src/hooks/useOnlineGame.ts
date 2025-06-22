@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { getValidMoves } from '../logic/game';
-import type { Cell } from '../types';
+import { getValidMoves, index, SIZE } from '../logic/game';
+import type { Board } from '../types';
 
 export type MatchType = 'open' | 'pass';
 
 export interface OnlineState {
-  board: Cell[][];
+  board: Board;
   turn: 1 | 2;
   myColor: 1 | 2 | null;
   waiting: boolean;
@@ -23,7 +23,7 @@ export function useOnlineGame() {
   const ignoreCloseRef = useRef(false);
   const lastMatch = useRef<{ type: MatchType; pass?: string } | null>(null);
   const [state, setState] = useState<OnlineState>({
-    board: [],
+    board: new Uint8Array(),
     turn: 1,
     myColor: null,
     waiting: false,
@@ -34,11 +34,10 @@ export function useOnlineGame() {
   const [error, setError] = useState<string | null>(null);
 
   const computeNext = (
-    board: Cell[][],
+    board: Board,
     turn: 1 | 2
   ): { moves: { x: number; y: number; flips: [number, number][] }[]; over: boolean } => {
-    if (board.length < 8 || board.some(row => row.length < 8)) {
-      // Not a full board yet (e.g. before connection), so avoid checking moves
+    if (board.length < SIZE * SIZE) {
       return { moves: [], over: false };
     }
     const moves = getValidMoves(turn, board);
@@ -54,7 +53,7 @@ export function useOnlineGame() {
   const connect = (type: MatchType, pass?: string) => {
     lastMatch.current = { type, pass };
     setState({
-      board: [],
+      board: new Uint8Array(),
       turn: 1,
       myColor: null,
       waiting: true,
@@ -165,7 +164,7 @@ export function useOnlineGame() {
     if (reset) {
       lastMatch.current = null;
       setState({
-        board: [],
+        board: new Uint8Array(),
         turn: 1,
         myColor: null,
         waiting: false,
@@ -186,7 +185,7 @@ export function useOnlineGame() {
     if (lastMatch.current) {
       // Clear board immediately so the previous game isn't visible
       setState({
-        board: [],
+        board: new Uint8Array(),
         turn: 1,
         myColor: null,
         waiting: true,
