@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { Board } from '../types';
+import type { Board as BoardState } from '../types';
 
 interface FlipAnim {
   x: number;
@@ -13,14 +13,14 @@ interface BoardAnimation {
 }
 
 interface BoardProps {
-  board: Board;
+  board: BoardState;
   validMoves: { x: number; y: number }[];
   onCellClick: (x: number, y: number) => void;
   animations?: BoardAnimation;
   disabled?: boolean;
 }
 
-const Board: FC<BoardProps> = ({ board, validMoves, onCellClick, animations, disabled }) => {
+const BoardComponent: FC<BoardProps> = ({ board, validMoves, onCellClick, animations, disabled }) => {
   return (
     <table id="board" style={{ pointerEvents: disabled ? 'none' : 'auto' }}>
       <tbody>
@@ -59,4 +59,4 @@ const Board: FC<BoardProps> = ({ board, validMoves, onCellClick, animations, dis
   );
 };
 
-export default Board;
+export default BoardComponent;
