@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import Board from './components/Board';
+import BoardComponent from './components/Board';
 import './style.css';
-import { getValidMoves, countStones } from './logic/game';
+import { getValidMoves, countStones, index } from './logic/game';
 import { AI_CONFIG, TIMING_CONFIG } from './ai/config';
 import { useCpuWorker } from './hooks/useCpuWorker';
 import { useOnlineGame } from './hooks/useOnlineGame';
-import type { Cell } from './types';
+import type { Board as BoardState } from './types';
 
 const DEFAULT_CPU_DELAY_MS = TIMING_CONFIG.cpuDelayMs;
 
@@ -34,10 +34,10 @@ type Mode =
   | 'cpu-cpu-result';
 
 function App() {
-  const createInitialBoard = (): Cell[][] => {
-    const b: Cell[][] = Array.from({ length: SIZE }, () => Array(SIZE).fill(0 as Cell));
-    b[3][3] = 2; b[3][4] = 1;
-    b[4][3] = 1; b[4][4] = 2;
+  const createInitialBoard = (): BoardState => {
+    const b = new Uint8Array(SIZE * SIZE) as BoardState;
+    b[index(3,3)] = 2; b[index(4,3)] = 1;
+    b[index(3,4)] = 1; b[index(4,4)] = 2;
     return b;
   };
 
@@ -78,14 +78,14 @@ function App() {
     whiteMoveCount: 0,
     turnTotal: 0,
   });
-  const [board, setBoard] = useState<Cell[][]>(createInitialBoard);
+  const [board, setBoard] = useState<BoardState>(createInitialBoard);
   const [turn, setTurn] = useState<1 | 2>(1);
   const [validMoves, setValidMoves] = useState<{ x: number; y: number; flips: [number, number][] }[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [message, setMessage] = useState('');
   const [cpuThinking, setCpuThinking] = useState(false);
   const randomRef = useRef<boolean>(false);
-  const prevOnlineBoardRef = useRef<Cell[][]>([]);
+  const prevOnlineBoardRef = useRef<BoardState>(new Uint8Array());
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animEndRef = useRef(Date.now());
   const [animations, setAnimations] = useState<BoardAnimation>({ placed: undefined, flips: [] });
@@ -165,7 +165,7 @@ function App() {
     } else if (mode === 'online') {
       const initial = onlineState.board.length ? onlineState.board : createInitialBoard();
       setBoard(initial);
-      prevOnlineBoardRef.current = initial.map(row => [...row]);
+      prevOnlineBoardRef.current = initial.slice();
       setTurn(onlineState.turn);
       setGameOver(onlineState.gameOver);
       if (onlineState.waiting) {
@@ -179,14 +179,14 @@ function App() {
   useEffect(() => {
     if (mode !== 'online') return;
     const newBoard = onlineState.board.length ? onlineState.board : createInitialBoard();
-    if (prevOnlineBoardRef.current.length === SIZE && newBoard.length === SIZE) {
+    if (prevOnlineBoardRef.current.length === SIZE * SIZE && newBoard.length === SIZE * SIZE) {
       const lastTurn = 3 - onlineState.turn as 1 | 2;
       let placed: { x: number; y: number } | null = null;
       const flips: [number, number][] = [];
       for (let y = 0; y < SIZE; y++) {
         for (let x = 0; x < SIZE; x++) {
-          const prev = prevOnlineBoardRef.current[y][x];
-          const cur = newBoard[y][x];
+          const prev = prevOnlineBoardRef.current[index(x, y)];
+          const cur = newBoard[index(x, y)];
           if (prev !== cur) {
             if (prev === 0 && cur === lastTurn) {
               placed = { x, y };
@@ -199,7 +199,7 @@ function App() {
       if (placed) startAnimation(placed, flips);
     }
     setBoard(newBoard);
-    prevOnlineBoardRef.current = newBoard.map(row => [...row]);
+    prevOnlineBoardRef.current = newBoard.slice();
     setTurn(onlineState.turn);
     setGameOver(onlineState.gameOver);
     if (onlineState.waiting) {
@@ -275,9 +275,9 @@ function App() {
         return;
       }
       if (!move) return;
-      const newBoard = board.map(row => [...row]);
-      newBoard[move.y][move.x] = turn;
-      move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
+      const newBoard = board.slice();
+      newBoard[index(move.x, move.y)] = turn;
+      move.flips.forEach(([fx, fy]) => newBoard[index(fx, fy)] = turn);
       setBoard(newBoard);
 
       startAnimation({ x: move.x, y: move.y }, move.flips);
@@ -300,11 +300,11 @@ function App() {
       if (turn !== onlineState.myColor) return;
       const move = onlineState.validMoves.find(m => m.x === x && m.y === y);
       if (!move) return;
-      const newBoard = board.map(row => [...row]);
-      newBoard[y][x] = turn;
-      move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
+      const newBoard = board.slice();
+      newBoard[index(x, y)] = turn;
+      move.flips.forEach(([fx, fy]) => newBoard[index(fx, fy)] = turn);
       setBoard(newBoard);
-      prevOnlineBoardRef.current = newBoard.map(row => [...row]);
+      prevOnlineBoardRef.current = newBoard.slice();
       startAnimation({ x, y }, move.flips);
       setTurn(3 - turn as 1 | 2);
       sendOnlineMove(x, y);
@@ -315,9 +315,9 @@ function App() {
       const moves = getValidMoves(turn, board);
       const move = moves.find(m => m.x === x && m.y === y);
       if (!move) return;
-      const newBoard = board.map(row => [...row]);
-      newBoard[y][x] = turn;
-      move.flips.forEach(([fx, fy]) => newBoard[fy][fx] = turn);
+      const newBoard = board.slice();
+      newBoard[index(x, y)] = turn;
+      move.flips.forEach(([fx, fy]) => newBoard[index(fx, fy)] = turn);
       setBoard(newBoard);
 
       startAnimation({ x, y }, move.flips);
@@ -637,7 +637,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
             ? `VS CPU（${AI_CONFIG[cpuLevel]?.name}）`
             : `CPU vs CPU ${currentMatch}/${numMatches}（${AI_CONFIG[cpu1Level]?.name} vs ${AI_CONFIG[cpu2Level]?.name}）`}
         </p>
-        <Board
+        <BoardComponent
           board={board}
           validMoves={gameOver ? [] : validMoves}
           onCellClick={handleClick}

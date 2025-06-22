@@ -1,8 +1,8 @@
 import { useRef } from 'react';
-import type { Cell } from '../types';
+import type { Board } from '../types';
 
 export type CpuRequest = {
-  board: Cell[][];
+  board: Board;
   turn: 1 | 2;
   level: number;
 };
