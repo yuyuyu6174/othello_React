@@ -16,6 +16,19 @@ function hashBoard(board: Board): string {
   return key;
 }
 
+// check if any move results in opponent having zero stones
+function findEliminationMove(board: Board, color: 1 | 2) {
+  const moves = getAllValidMoves(color, board);
+  for (const move of moves) {
+    const next = simulateMove(board, move, color);
+    const { black, white } = countStones(next);
+    if ((color === BLACK && white === 0) || (color === WHITE && black === 0)) {
+      return move;
+    }
+  }
+  return null;
+}
+
 export function cpuMove(
   board: Board,
   turn: 1 | 2,
@@ -30,6 +43,9 @@ export function cpuMove(
   const evalFunc = (b: Board) => config.evaluator(b, turn, config);
   let emptyCount = 0;
   for (let i = 0; i < board.length; i++) if (board[i] === 0) emptyCount++;
+
+  const elimination = findEliminationMove(board, turn);
+  if (elimination) return elimination;
 
   if (config.useEndgameSolver && config.endgame && emptyCount <= (config.endgame.maxEmpty ?? 12)) {
     return getBestMoveFullSearch(board, turn, config);
