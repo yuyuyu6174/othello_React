@@ -87,6 +87,7 @@ function App() {
   const randomRef = useRef<boolean>(false);
   const prevOnlineBoardRef = useRef<Cell[][]>([]);
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animEndRef = useRef(Date.now());
   const [animations, setAnimations] = useState<BoardAnimation>({ placed: undefined, flips: [] });
   const [animating, setAnimating] = useState(false);
 
@@ -106,11 +107,13 @@ function App() {
       .map((c, idx) => ({ x: c.x, y: c.y, delay: idx * 100 }));
     setAnimations({ placed, flips });
     setAnimating(true);
+    const duration = flips.length * 100 + 400;
+    animEndRef.current = Date.now() + duration;
     animTimerRef.current = setTimeout(() => {
       setAnimations({ placed: undefined, flips: [] });
       setAnimating(false);
       animTimerRef.current = null;
-    }, flips.length * 100 + 400);
+    }, duration);
   };
 
   const resolvePlayerColor = () => {
@@ -240,6 +243,7 @@ function App() {
         }
       } else {
         setMessage(`${turn === 1 ? "黒" : "白"}は打てません。パス！`);
+        animEndRef.current = Date.now();
         setTurn(3 - turn as 1 | 2);
       }
     } else {
@@ -262,6 +266,7 @@ function App() {
     const start = performance.now();
     const thinking = calculateMove({ board, turn, level }).then(move => ({ move, elapsed: performance.now() - start }));
 
+    const delay = Math.max(0, animEndRef.current - Date.now()) + TIMING_CONFIG.cpuDelayMs;
     cpuTimeoutRef.current = setTimeout(async () => {
       const { move, elapsed } = await thinking;
       if (cpuCpuCancelRef.current) {
@@ -286,8 +291,8 @@ function App() {
       setTurn(3 - turn as 1 | 2);
       setCpuThinking(false);
       cpuTimeoutRef.current = null;
-    }, TIMING_CONFIG.cpuDelayMs);
-  }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking, animating]);
+    }, delay);
+  }, [turn, board, mode, gameOver, cpuLevel, cpu1Level, cpu2Level, actualPlayerColor, cpu1ActualColor, cpuThinking]);
 
   const handleClick = (x: number, y: number) => {
     if (gameOver || animating) return;
@@ -328,6 +333,7 @@ function App() {
     setBoard(createInitialBoard());
     setTurn(firstTurn);
     setGameOver(false);
+    animEndRef.current = Date.now();
     setMessage(firstTurn === 1 ? '黒の番です' : '白の番です');
   };
 
