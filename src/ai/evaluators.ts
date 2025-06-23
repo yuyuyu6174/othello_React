@@ -113,7 +113,9 @@ function evaluateStrategicGeneralBoard(
   // パリティ
   if (config.considerParity) {
     let empty = 0;
-    for (let i = 0; i < board.length; i++) if (board[i] === EMPTY) empty++;
+    for (let i = 0; i < board.length; i++) {
+      if (board[i] === EMPTY) empty++;
+    }
     if (empty <= 16) {
       const count = countStones(board);
       const parity = (color === WHITE ? count.white - count.black : count.black - count.white);

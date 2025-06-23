@@ -1,4 +1,4 @@
-import { AI_CONFIG, DEFAULT_AI_CONFIG, WHITE, BLACK } from './config';
+import { AI_CONFIG, DEFAULT_AI_CONFIG, WHITE, BLACK, EMPTY } from './config';
 import { getAllValidMoves, simulateMove, countStones, applyMove, undoMove } from '../logic/game';
 import type { Board } from '../types';
 
@@ -42,7 +42,9 @@ export function cpuMove(
   };
   const evalFunc = (b: Board) => config.evaluator(b, turn, config);
   let emptyCount = 0;
-  for (let i = 0; i < board.length; i++) if (board[i] === 0) emptyCount++;
+  for (let i = 0; i < board.length; i++) {
+    if (board[i] === EMPTY) emptyCount++;
+  }
 
   const elimination = findEliminationMove(board, turn);
   if (elimination) return elimination;
