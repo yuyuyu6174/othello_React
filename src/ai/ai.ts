@@ -7,6 +7,12 @@ const transpositionTable = new Map<string, number>();
 // transposition table for endgame solver
 const endgameTranspositionTable = new Map<string, number>();
 
+// Allow external modules to clear cached search results
+export function clearTranspositionTables(): void {
+  transpositionTable.clear();
+  endgameTranspositionTable.clear();
+}
+
 // more efficient board hashing than JSON.stringify for flat board
 function hashBoard(board: Board): string {
   let key = '';

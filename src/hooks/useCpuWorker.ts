@@ -25,6 +25,13 @@ export function useCpuWorker() {
     return workerRef.current;
   };
 
+  const reset = () => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+  };
+
   const calculateMove = (data: CpuRequest): Promise<CpuResponse> => {
     return new Promise((resolve) => {
       const worker = createWorker();
@@ -37,5 +44,5 @@ export function useCpuWorker() {
     });
   };
 
-  return { calculateMove };
+  return { calculateMove, reset };
 }
