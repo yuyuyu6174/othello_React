@@ -1,15 +1,15 @@
 import { SIZE, EMPTY, BLACK, WHITE, DEFAULT_AI_CONFIG } from './config';
+import type { Board } from '../types';
+import { index } from '../logic/game';
 
 
-type Board = number[][];
 
 function countStones(board: Board) {
   let white = 0, black = 0;
-  for (let row of board) {
-    for (let cell of row) {
-      if (cell === WHITE) white++;
-      else if (cell === BLACK) black++;
-    }
+  for (let i = 0; i < board.length; i++) {
+    const cell = board[i];
+    if (cell === WHITE) white++;
+    else if (cell === BLACK) black++;
   }
   return { white, black };
 }
@@ -25,7 +25,7 @@ function getStableStones(board: Board): number[][] {
     for (let [dx, dy] of directions) {
       let cx = x + dx, cy = y + dy;
       while (cx >= 0 && cx < SIZE && cy >= 0 && cy < SIZE) {
-        if (board[cy][cx] !== color) return false;
+        if (board[index(cx, cy)] !== color) return false;
         cx += dx;
         cy += dy;
       }
@@ -35,7 +35,7 @@ function getStableStones(board: Board): number[][] {
 
   for (let y = 0; y < SIZE; y++) {
     for (let x = 0; x < SIZE; x++) {
-      const cell = board[y][x];
+      const cell = board[index(x, y)];
       if (cell !== EMPTY && check(x, y, cell)) {
         stable[y][x] = cell;
       }
@@ -53,8 +53,9 @@ export function evaluateBoard(board: Board, color: number): number {
   let score = 0;
   for (let y = 0; y < SIZE; y++) {
     for (let x = 0; x < SIZE; x++) {
-      if (board[y][x] === color) score++;
-      else if (board[y][x] === opponent) score--;
+      const cell = board[index(x, y)];
+      if (cell === color) score++;
+      else if (cell === opponent) score--;
     }
   }
   return score;
@@ -91,7 +92,7 @@ function evaluateStrategicGeneralBoard(
   if (useWeights) {
     for (let y = 0; y < SIZE; y++) {
       for (let x = 0; x < SIZE; x++) {
-        const cell = board[y][x];
+        const cell = board[index(x, y)];
         if (cell === color) score += weights[y][x];
         else if (cell === opponent) score -= weights[y][x];
       }
@@ -111,7 +112,10 @@ function evaluateStrategicGeneralBoard(
 
   // パリティ
   if (config.considerParity) {
-    const empty = board.flat().filter(c => c === EMPTY).length;
+    let empty = 0;
+    for (let i = 0; i < board.length; i++) {
+      if (board[i] === EMPTY) empty++;
+    }
     if (empty <= 16) {
       const count = countStones(board);
       const parity = (color === WHITE ? count.white - count.black : count.black - count.white);
@@ -123,8 +127,8 @@ function evaluateStrategicGeneralBoard(
   if (config.penalizeXSquare) {
     const xSquares = [ [1,1], [6,1], [1,6], [6,6] ];
     for (const [x, y] of xSquares) {
-      if (board[y][x] === color) score -= xPenalty;
-      if (board[y][x] === opponent) score += xPenalty;
+      if (board[index(x, y)] === color) score -= xPenalty;
+      if (board[index(x, y)] === opponent) score += xPenalty;
     }
   }
 
@@ -135,8 +139,8 @@ function evaluateStrategicGeneralBoard(
       [6,0],[6,1],[7,1],[6,6],[6,7],[7,6]
     ];
     for (const [x, y] of trapSquares) {
-      if (board[y][x] === color) score -= trapPenalty;
-      if (board[y][x] === opponent) score += trapPenalty;
+      if (board[index(x, y)] === color) score -= trapPenalty;
+      if (board[index(x, y)] === opponent) score += trapPenalty;
     }
   }
 
