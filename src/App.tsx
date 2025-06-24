@@ -41,7 +41,7 @@ function App() {
     return b;
   };
 
-  const { calculateMove } = useCpuWorker();
+  const { calculateMove, reset } = useCpuWorker();
   const [mode, setMode] = useState<Mode>('title');
   // const [cpuLevel, setCpuLevel] = useState<number>(1);
   const [cpuLevel, setCpuLevel] = useState<keyof typeof AI_CONFIG>(1);
@@ -124,6 +124,7 @@ function App() {
 
   useEffect(() => {
     if (mode === 'cpu') {
+      reset();
       TIMING_CONFIG.cpuDelayMs = DEFAULT_CPU_DELAY_MS;
       const resolved = resolvePlayerColor();
       setActualPlayerColor(resolved);
@@ -138,6 +139,7 @@ function App() {
       setGameOver(false);
       setMessage('黒の番です');
     } else if (mode === 'cpu-cpu') {
+      reset();
       TIMING_CONFIG.cpuDelayMs = cpuDelay;
       setCpu1ActualColor(cpu1Color === 'black' ? 1 : 2);
       setBoard(createInitialBoard());
@@ -327,6 +329,7 @@ function App() {
   };
 
   const restartGame = () => {
+    reset();
     const resolved = randomRef.current ? resolvePlayerColor() : (playerColor === 'black' ? 1 : 2);
     setActualPlayerColor(resolved);
     const firstTurn = 1;
@@ -367,6 +370,7 @@ function App() {
     } else {
       setCurrentMatch(c => c + 1);
       setTimeout(() => {
+        reset();
         setBoard(createInitialBoard());
         setTurn(1);
         setGameOver(false);
