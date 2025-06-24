@@ -5,6 +5,7 @@ interface FlipAnim {
   x: number;
   y: number;
   delay: number;
+  prev: 1 | 2;
 }
 
 interface BoardAnimation {
@@ -39,13 +40,13 @@ const BoardComponent: FC<BoardProps> = ({ board, validMoves, onCellClick, animat
                 >
                   {cell === 1 && (
                     <div
-                      className={`piece black${isPlaced ? ' pop' : ''}${flip ? ' flip' : ''}`}
+                      className={`piece black${isPlaced ? ' pop' : ''}${flip ? ' flip from-' + (flip.prev === 1 ? 'black' : 'white') : ''}`}
                       style={flip ? { animationDelay: `${flip.delay}ms` } : undefined}
                     />
                   )}
                   {cell === 2 && (
                     <div
-                      className={`piece white${isPlaced ? ' pop' : ''}${flip ? ' flip' : ''}`}
+                      className={`piece white${isPlaced ? ' pop' : ''}${flip ? ' flip from-' + (flip.prev === 1 ? 'black' : 'white') : ''}`}
                       style={flip ? { animationDelay: `${flip.delay}ms` } : undefined}
                     />
                   )}
