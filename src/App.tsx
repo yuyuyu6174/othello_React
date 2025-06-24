@@ -179,6 +179,14 @@ function App() {
   }, [mode]);
 
   useEffect(() => {
+    return () => {
+      if (mode === 'cpu') {
+        abortCpu();
+      }
+    };
+  }, [mode]);
+
+  useEffect(() => {
     if (mode !== 'online') return;
     const newBoard = onlineState.board.length ? onlineState.board : createInitialBoard();
     if (prevOnlineBoardRef.current.length === SIZE * SIZE && newBoard.length === SIZE * SIZE) {
@@ -338,6 +346,15 @@ function App() {
     setGameOver(false);
     animEndRef.current = Date.now();
     setMessage(firstTurn === 1 ? '黒の番です' : '白の番です');
+  };
+
+  const abortCpu = () => {
+    if (cpuTimeoutRef.current) {
+      clearTimeout(cpuTimeoutRef.current);
+      cpuTimeoutRef.current = null;
+    }
+    reset();
+    setCpuThinking(false);
   };
 
   const abortCpuCpu = (next: Mode = 'cpu-cpu-result') => {
@@ -663,6 +680,9 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
                 abortCpuCpu('title');
               } else if (mode === 'online') {
                 disconnectOnline(true);
+                setMode('title');
+              } else if (mode === 'cpu') {
+                abortCpu();
                 setMode('title');
               } else {
                 setMode('title');
