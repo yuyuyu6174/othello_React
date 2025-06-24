@@ -33,6 +33,6 @@ npm install
 npm run dev
 ```
 
-オンライン対戦機能では公開 WebSocket サーバー
-`wss://othello-server-11z5.onrender.com/othello` を利用します。
-接続先は環境変数 `VITE_ONLINE_SERVER_URL` で上書き可能です（例: `ws://localhost:10000/othello`）。
+オンライン対戦機能では Colyseus サーバー
+`wss://othello-server-11z5.onrender.com` を利用します。
+接続先は環境変数 `VITE_ONLINE_SERVER_URL` で上書き可能です（例: `ws://localhost:2567`）。
