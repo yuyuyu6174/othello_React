@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import type { Board as BoardState } from '../types';
+import Cell from './Cell';
 
 interface FlipAnim {
   x: number;
@@ -32,24 +33,16 @@ const BoardComponent: FC<BoardProps> = ({ board, validMoves, onCellClick, animat
               const isPlaced = animations?.placed && animations.placed.x === x && animations.placed.y === y;
               const flip = animations?.flips.find(f => f.x === x && f.y === y);
               return (
-                <td
+                <Cell
                   key={x}
-                  onClick={() => onCellClick(x, y)}
-                  className={isHint ? 'hint' : ''}
-                >
-                  {cell === 1 && (
-                    <div
-                      className={`piece black${isPlaced ? ' pop' : ''}${flip ? ' flip' : ''}`}
-                      style={flip ? { animationDelay: `${flip.delay}ms` } : undefined}
-                    />
-                  )}
-                  {cell === 2 && (
-                    <div
-                      className={`piece white${isPlaced ? ' pop' : ''}${flip ? ' flip' : ''}`}
-                      style={flip ? { animationDelay: `${flip.delay}ms` } : undefined}
-                    />
-                  )}
-                </td>
+                  x={x}
+                  y={y}
+                  cell={cell}
+                  isHint={isHint}
+                  isPlaced={Boolean(isPlaced)}
+                  flipDelay={flip?.delay}
+                  onClick={onCellClick}
+                />
               );
             })}
           </tr>
