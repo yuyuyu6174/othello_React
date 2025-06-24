@@ -68,6 +68,7 @@ td {
   position: relative;
   text-align: center;
   vertical-align: middle;
+  perspective: 600px;
 }
 
 .piece {
@@ -79,7 +80,55 @@ td {
   border-radius: 50%;
   transform-style: preserve-3d;
   transform-origin: center;
+}
+
+.piece::before,
+.piece::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   backface-visibility: hidden;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.piece.black::before {
+  background-color: black;
+  transform: translateZ(4px);
+}
+
+.piece.black::after {
+  background-color: white;
+  transform: rotateY(180deg) translateZ(4px);
+}
+
+.piece.white::before {
+  background-color: white;
+  transform: translateZ(4px);
+}
+
+.piece.white::after {
+  background-color: black;
+  transform: rotateY(180deg) translateZ(4px);
+}
+
+.piece.white.from-black::before {
+  background-color: black;
+}
+
+.piece.white.from-black::after {
+  background-color: white;
+}
+
+.piece.black.from-white::before {
+  background-color: white;
+}
+
+.piece.black.from-white::after {
+  background-color: black;
 }
 
 @keyframes pop {
@@ -102,11 +151,11 @@ td {
 }
 
 .black {
-  background-color: black;
+  background-color: transparent;
 }
 
 .white {
-  background-color: white;
+  background-color: transparent;
 }
 
 .hint::after {

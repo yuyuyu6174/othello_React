@@ -15,6 +15,7 @@ interface FlipAnim {
   x: number;
   y: number;
   delay: number;
+  prev: 1 | 2;
 }
 
 interface BoardAnimation {
@@ -93,7 +94,8 @@ function App() {
 
   const startAnimation = (
     placed: { x: number; y: number },
-    flipsRaw: [number, number][]
+    flipsRaw: [number, number][],
+    newColor: 1 | 2
   ) => {
     if (animTimerRef.current) {
       clearTimeout(animTimerRef.current);
@@ -104,7 +106,7 @@ function App() {
     const flips = flipsRaw
       .map(([fx, fy]) => ({ x: fx, y: fy, dist: Math.abs(fx - placed.x) + Math.abs(fy - placed.y) }))
       .sort((a, b) => a.dist - b.dist)
-      .map((c, idx) => ({ x: c.x, y: c.y, delay: idx * 100 }));
+      .map((c, idx) => ({ x: c.x, y: c.y, delay: idx * 100, prev: 3 - newColor as 1 | 2 }));
     setAnimations({ placed, flips });
     setAnimating(true);
     const duration = flips.length * 100 + 400;
@@ -198,7 +200,7 @@ function App() {
           }
         }
       }
-      if (placed) startAnimation(placed, flips);
+      if (placed) startAnimation(placed, flips, lastTurn);
     }
     setBoard(newBoard);
     prevOnlineBoardRef.current = newBoard.slice();
@@ -282,7 +284,7 @@ function App() {
       move.flips.forEach(([fx, fy]) => newBoard[index(fx, fy)] = turn);
       setBoard(newBoard);
 
-      startAnimation({ x: move.x, y: move.y }, move.flips);
+      startAnimation({ x: move.x, y: move.y }, move.flips, turn);
       if (mode === 'cpu-cpu') {
         if (turn === 1) {
           setStats(s => ({ ...s, blackTimeTotal: s.blackTimeTotal + elapsed, blackMoveCount: s.blackMoveCount + 1, turnTotal: s.turnTotal + 1 }));
@@ -307,7 +309,7 @@ function App() {
       move.flips.forEach(([fx, fy]) => newBoard[index(fx, fy)] = turn);
       setBoard(newBoard);
       prevOnlineBoardRef.current = newBoard.slice();
-      startAnimation({ x, y }, move.flips);
+      startAnimation({ x, y }, move.flips, turn);
       setTurn(3 - turn as 1 | 2);
       sendOnlineMove(x, y);
       return;
@@ -322,7 +324,7 @@ function App() {
       move.flips.forEach(([fx, fy]) => newBoard[index(fx, fy)] = turn);
       setBoard(newBoard);
 
-      startAnimation({ x, y }, move.flips);
+      startAnimation({ x, y }, move.flips, turn);
 
       setTurn(3 - turn as 1 | 2);
     }
