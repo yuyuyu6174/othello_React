@@ -391,6 +391,9 @@ function App() {
             <button onClick={() => setMode('online-select')}>オンライン対戦</button>
           </div>
         </div>
+        <p id="build-time">
+          ビルド日時: {new Date(__BUILD_TIME__).toLocaleString()}
+        </p>
       </div>
     );
   }

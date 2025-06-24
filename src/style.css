@@ -128,3 +128,9 @@ td {
   font-weight: bold;
 }
 
+#build-time {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 20px;
+}
+

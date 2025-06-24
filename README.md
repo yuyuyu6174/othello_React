@@ -36,3 +36,7 @@ npm run dev
 オンライン対戦機能では Colyseus サーバー
 `wss://othello-server-11z5.onrender.com` を利用します。
 接続先は環境変数 `VITE_ONLINE_SERVER_URL` で上書き可能です（例: `ws://localhost:2567`）。
+
+### ビルド日時の表示
+
+タイトル画面の下部に、アプリをビルドした日時が表示されます。Vite の `define` オプションで注入された `__BUILD_TIME__` 定数を利用しています。
