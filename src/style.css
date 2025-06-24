@@ -66,9 +66,8 @@ td {
   border: 1px solid #333;
   background-color: green;
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .piece {
