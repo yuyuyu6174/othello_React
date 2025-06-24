@@ -68,6 +68,7 @@ td {
   position: relative;
   text-align: center;
   vertical-align: middle;
+  perspective: 800px;
 }
 
 .piece {
@@ -77,6 +78,9 @@ td {
   display: block;
   margin: auto;
   transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transform-origin: center;
+  backface-visibility: hidden;
 }
 
 @keyframes pop {
