@@ -77,6 +77,8 @@ td {
   display: inline-block;
   vertical-align: middle;
   transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transform: scale(1);
 }
 
 @keyframes pop {
@@ -90,12 +92,13 @@ td {
 }
 
 @keyframes flip {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(180deg); }
+  from { transform: rotateY(0deg) scale(1); }
+  to { transform: rotateY(180deg) scale(1); }
 }
 
 .flip {
   animation: flip 0.4s ease-out forwards;
+  transform: scale(1);
 }
 
 .black {
