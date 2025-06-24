@@ -68,15 +68,19 @@ td {
   position: relative;
   text-align: center;
   vertical-align: middle;
+  perspective: 800px;
 }
 
 .piece {
   width: 80%;
   height: 80%;
   border-radius: 50%;
-  display: inline-block;
-  vertical-align: middle;
+  display: block;
+  margin: auto;
   transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transform-origin: center;
+  backface-visibility: hidden;
 }
 
 @keyframes pop {
