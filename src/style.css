@@ -73,10 +73,13 @@ td {
 .piece {
   width: 80%;
   height: 80%;
+  position: absolute;
+  top: 10%;
+  left: 10%;
   border-radius: 50%;
-  display: inline-block;
-  vertical-align: middle;
   transform-style: preserve-3d;
+  transform-origin: center;
+  backface-visibility: hidden;
 }
 
 @keyframes pop {
