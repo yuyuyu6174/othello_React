@@ -187,3 +187,4 @@ body[data-theme='dark'] #menu {
   align-items: flex-start;
   gap: 4px;
 }
+body[data-theme='dark'] h1 { color: #eee; }
