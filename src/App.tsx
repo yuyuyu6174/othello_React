@@ -125,6 +125,7 @@ function App() {
   useEffect(() => {
     if (mode === 'cpu') {
       reset();
+      cpuCpuCancelRef.current = false;
       TIMING_CONFIG.cpuDelayMs = DEFAULT_CPU_DELAY_MS;
       const resolved = resolvePlayerColor();
       setActualPlayerColor(resolved);
@@ -176,6 +177,14 @@ function App() {
         setMessage(onlineState.myColor === onlineState.turn ? 'あなたの番です' : '相手の番です');
       }
     }
+  }, [mode]);
+
+  useEffect(() => {
+    return () => {
+      if (mode === 'cpu') {
+        abortCpu();
+      }
+    };
   }, [mode]);
 
   useEffect(() => {
@@ -340,6 +349,21 @@ function App() {
     setMessage(firstTurn === 1 ? '黒の番です' : '白の番です');
   };
 
+  const initBoard = () => {
+    setBoard(createInitialBoard());
+    setTurn(1);
+    setGameOver(false);
+  };
+
+  const abortCpu = () => {
+    if (cpuTimeoutRef.current) {
+      clearTimeout(cpuTimeoutRef.current);
+      cpuTimeoutRef.current = null;
+    }
+    reset();
+    setCpuThinking(false);
+  };
+
   const abortCpuCpu = (next: Mode = 'cpu-cpu-result') => {
     cpuCpuCancelRef.current = true;
     if (cpuTimeoutRef.current) {
@@ -437,7 +461,14 @@ function App() {
             </label>
           </div>
           <div style={{ marginTop: 16 }}>
-            <button onClick={() => setMode('cpu')}>対戦開始</button>
+            <button
+              onClick={() => {
+                initBoard();
+                setMode('cpu');
+              }}
+            >
+              対戦開始
+            </button>
             <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>戻る</button>
           </div>
         </div>
@@ -526,7 +557,14 @@ function App() {
             </label>
           </div>
           <div style={{ marginTop: 16 }}>
-            <button onClick={() => setMode('cpu-cpu')}>開始</button>
+            <button
+              onClick={() => {
+                initBoard();
+                setMode('cpu-cpu');
+              }}
+            >
+              開始
+            </button>
             <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>戻る</button>
           </div>
         </div>
@@ -663,6 +701,9 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
                 abortCpuCpu('title');
               } else if (mode === 'online') {
                 disconnectOnline(true);
+                setMode('title');
+              } else if (mode === 'cpu') {
+                abortCpu();
                 setMode('title');
               } else {
                 setMode('title');
