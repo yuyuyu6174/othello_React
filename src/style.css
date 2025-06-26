@@ -134,6 +134,14 @@ td {
   margin-top: 20px;
 }
 
+body[data-theme='dark'] #message {
+  color: #ccc;
+}
+
+body[data-theme='dark'] #build-time {
+  color: #aaa;
+}
+
 
 /* Theme colors */
 body[data-theme='dark'] {
