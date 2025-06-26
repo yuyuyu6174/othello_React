@@ -125,6 +125,7 @@ function App() {
   useEffect(() => {
     if (mode === 'cpu') {
       reset();
+      cpuCpuCancelRef.current = false;
       TIMING_CONFIG.cpuDelayMs = DEFAULT_CPU_DELAY_MS;
       const resolved = resolvePlayerColor();
       setActualPlayerColor(resolved);
