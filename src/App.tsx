@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import BoardComponent from './components/Board';
+import SettingsMenu from './components/SettingsMenu';
 import './style.css';
 import { getValidMoves, countStones, index } from './logic/game';
 import { AI_CONFIG, TIMING_CONFIG } from './ai/config';
 import { useCpuWorker } from './hooks/useCpuWorker';
 import { useOnlineGame } from './hooks/useOnlineGame';
+import { useTranslation } from 'react-i18next';
 import type { Board as BoardState } from './types';
 
 const DEFAULT_CPU_DELAY_MS = TIMING_CONFIG.cpuDelayMs;
@@ -34,6 +36,7 @@ type Mode =
   | 'cpu-cpu-result';
 
 function App() {
+  const { t } = useTranslation();
   const createInitialBoard = (): BoardState => {
     const b = new Uint8Array(SIZE * SIZE) as BoardState;
     b[index(3,3)] = 2; b[index(4,3)] = 1;
@@ -405,18 +408,19 @@ function App() {
   if (mode === 'title') {
     return (
       <div>
-        <h1>オセロ</h1>
+        <SettingsMenu />
+        <h1>{t('title')}</h1>
         <div id="mode-selection">
-          <h2>モードを選択してください</h2>
+          <h2>{t('selectMode')}</h2>
           <div className="mode-buttons">
-            <button onClick={() => setMode('cpu-select')}>CPU対戦</button>
-            <button onClick={() => setMode('cpu-cpu-select')}>CPU vs CPU</button>
-            <button onClick={() => setMode('pvp')}>2人対戦</button>
-            <button onClick={() => setMode('online-select')}>オンライン対戦</button>
+            <button onClick={() => setMode('cpu-select')}>{t('cpuMatch')}</button>
+            <button onClick={() => setMode('cpu-cpu-select')}>{t('cpuVsCpu')}</button>
+            <button onClick={() => setMode('pvp')}>{t('twoPlayers')}</button>
+            <button onClick={() => setMode('online-select')}>{t('onlineMatch')}</button>
           </div>
         </div>
         <p id="build-time">
-          ビルド日時: {new Date(__BUILD_TIME__).toLocaleString()}
+          {t('buildTime')}: {new Date(__BUILD_TIME__).toLocaleString()}
         </p>
       </div>
     );
@@ -425,10 +429,11 @@ function App() {
   if (mode === 'cpu-select') {
     return (
       <div>
+        <SettingsMenu />
         <h1>CPU対戦設定</h1>
         <div>
           <label>
-            CPUレベル：
+            CPUレベル:
             <select
               value={cpuLevel}
               onChange={(e) => setCpuLevel(Number(e.target.value))}
@@ -467,9 +472,9 @@ function App() {
                 setMode('cpu');
               }}
             >
-              対戦開始
+              {t('start')}
             </button>
-            <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>戻る</button>
+            <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>{t('back')}</button>
           </div>
         </div>
       </div>
@@ -479,6 +484,7 @@ function App() {
   if (mode === 'cpu-cpu-select') {
     return (
       <div>
+        <SettingsMenu />
         <h1>CPU vs CPU 設定</h1>
         <div>
           <label>
@@ -563,9 +569,9 @@ function App() {
                 setMode('cpu-cpu');
               }}
             >
-              開始
+              {t('start')}
             </button>
-            <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>戻る</button>
+            <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>{t('back')}</button>
           </div>
         </div>
       </div>
@@ -575,7 +581,8 @@ function App() {
   if (mode === 'online-select') {
     return (
       <div>
-        <h1>オンライン対戦</h1>
+        <SettingsMenu />
+        <h1>{t('onlineMatch')}</h1>
         <div style={{ marginTop: 16 }}>
           <button
             onClick={() => {
@@ -602,7 +609,7 @@ function App() {
             合言葉で対戦
           </button>
         </div>
-        <button onClick={() => setMode('title')} style={{ marginTop: 16 }}>戻る</button>
+        <button onClick={() => setMode('title')} style={{ marginTop: 16 }}>{t('back')}</button>
       </div>
     );
   }
@@ -638,14 +645,15 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
 
     return (
       <div>
+        <SettingsMenu />
         <h1>結果</h1>
         <pre style={{ whiteSpace: 'pre-wrap' }}>{summary}</pre>
         <button onClick={download}>結果をダウンロード</button>
         <button onClick={() => setMode('cpu-cpu-select')} style={{ marginLeft: 8 }}>
-          設定に戻る
+          {t('back')}
         </button>
         <button onClick={() => setMode('title')} style={{ marginLeft: 8 }}>
-          タイトルに戻る
+          {t('back')}
         </button>
       </div>
     );
@@ -654,6 +662,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
   if (mode === 'online' && onlineState.waiting) {
     return (
       <div>
+        <SettingsMenu />
         <h1>マッチング中...</h1>
         <p>対戦相手を待っています</p>
         <button
@@ -662,7 +671,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
             setMode('online-select');
           }}
         >
-          キャンセル
+          {t('back')}
         </button>
       </div>
     );
@@ -672,7 +681,8 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
     const { black: blackCount, white: whiteCount } = countStones(board);
     return (
       <div>
-        <h1>オセロ</h1>
+        <SettingsMenu />
+        <h1>{t('title')}</h1>
         <p style={{ fontWeight: 'bold' }}>
           {mode === 'online'
             ? 'オンライン対戦'
@@ -692,7 +702,7 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
         <p id="score-board">黒:{blackCount} 白:{whiteCount}</p>
         <p>{message}</p>
         {mode === 'online' && !gameOver && (
-          <button onClick={giveUpOnline}>降参</button>
+          <button onClick={giveUpOnline}>{t('giveup')}</button>
         )}
         {(mode !== 'online' || gameOver) && (
           <button
@@ -709,22 +719,22 @@ AI2（${cpu1ActualColor === 1 ? '白' : '黒'}）: ${AI_CONFIG[cpu2Level]?.name}
                 setMode('title');
               }
             }}>
-           タイトルに戻る
+           {t('back')}
           </button>
         )}
         {(mode === 'cpu' || mode === 'pvp') && gameOver && (
           <button onClick={restartGame} style={{ marginLeft: 8 }}>
-            再戦する
+            {t('resume')}
           </button>
         )}
         {mode === 'online' && gameOver && (
           <button onClick={reconnectOnline} style={{ marginLeft: 8 }}>
-            再戦する
+            {t('resume')}
           </button>
         )}
         {mode === 'cpu-cpu' && (
           <button onClick={() => abortCpuCpu()} style={{ marginLeft: 8 }}>
-            中止
+            {t('stop')}
           </button>
         )}
       </div>
