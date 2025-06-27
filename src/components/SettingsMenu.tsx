@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSettings } from '../hooks/useSettings';
-import type { ThemeMode } from '../hooks/useSettings';
+import { useSettings, type ThemeMode } from '../hooks/useSettings';
 import '../style.css';
 
 const SettingsMenu = () => {
@@ -17,7 +16,9 @@ const SettingsMenu = () => {
 
   return (
     <>
-      <button id="menu-btn" onClick={toggle}>☰</button>
+      <button id="menu-btn" onClick={toggle} className={open ? 'open' : ''}>
+        <span />
+      </button>
       <div id="menu" className={open ? 'open' : ''}>
         <label>
           {t('language')}:
@@ -31,10 +32,10 @@ const SettingsMenu = () => {
           <input value={playerName} onChange={e => setPlayerName(e.target.value)} />
         </label>
         <label>
-          {t('theme')}:
+          {t('darkMode')}:
           <select value={theme} onChange={e => setTheme(e.target.value as ThemeMode)}>
-            <option value="light">{t('light')}</option>
-            <option value="dark">{t('dark')}</option>
+            <option value="light">{t('off')}</option>
+            <option value="dark">{t('on')}</option>
             <option value="system">{t('system')}</option>
           </select>
         </label>

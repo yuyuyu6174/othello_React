@@ -158,25 +158,79 @@ body[data-theme='light'] {
   top: 8px;
   right: 8px;
   z-index: 1000;
-  font-size: 24px;
-  background: transparent;
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  color: #333;
   border: none;
+  border-radius: 50%;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+#menu-btn span,
+#menu-btn span::before,
+#menu-btn span::after {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+#menu-btn span {
+  position: relative;
+}
+
+#menu-btn span::before {
+  position: absolute;
+  top: -6px;
+  left: 0;
+}
+
+#menu-btn span::after {
+  position: absolute;
+  top: 6px;
+  left: 0;
+}
+
+#menu-btn.open span {
+  background: transparent;
+}
+
+#menu-btn.open span::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+#menu-btn.open span::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+body[data-theme='dark'] #menu-btn {
+  background: #444;
+  color: #fff;
 }
 
 #menu {
   position: fixed;
-  top: 0;
-  right: -220px;
+  top: 8px;
+  right: 8px;
   width: 200px;
-  height: 100%;
+  height: auto;
   background-color: var(--menu-bg, #fff);
-  box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: right 0.3s;
+  transform: translateX(110%);
+  transition: transform 0.3s;
   z-index: 999;
 }
 
@@ -186,7 +240,7 @@ body[data-theme='dark'] #menu {
 }
 
 #menu.open {
-  right: 0;
+  transform: translateX(0);
 }
 
 #menu label {
