@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import type { Board } from '../types';
+import { clearTranspositionTables } from '../ai/ai';
 
 export type CpuRequest = {
   board: Board;
@@ -30,6 +31,7 @@ export function useCpuWorker() {
       workerRef.current.terminate();
       workerRef.current = null;
     }
+    clearTranspositionTables();
   };
 
   const calculateMove = (data: CpuRequest): Promise<CpuResponse> => {
