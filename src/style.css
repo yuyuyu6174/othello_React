@@ -160,8 +160,8 @@ body[data-theme='light'] {
   z-index: 1000;
   width: 40px;
   height: 40px;
-  font-size: 24px;
   background: #fff;
+  color: #333;
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -169,6 +169,52 @@ body[data-theme='light'] {
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+#menu-btn span,
+#menu-btn span::before,
+#menu-btn span::after {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+#menu-btn span {
+  position: relative;
+}
+
+#menu-btn span::before {
+  position: absolute;
+  top: -6px;
+  left: 0;
+}
+
+#menu-btn span::after {
+  position: absolute;
+  top: 6px;
+  left: 0;
+}
+
+#menu-btn.open span {
+  background: transparent;
+}
+
+#menu-btn.open span::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+#menu-btn.open span::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+body[data-theme='dark'] #menu-btn {
+  background: #444;
+  color: #fff;
 }
 
 #menu {

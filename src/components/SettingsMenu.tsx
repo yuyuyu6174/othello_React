@@ -16,7 +16,9 @@ const SettingsMenu = () => {
 
   return (
     <>
-      <button id="menu-btn" onClick={toggle}>{open ? '✕' : '≡'}</button>
+      <button id="menu-btn" onClick={toggle} className={open ? 'open' : ''}>
+        <span />
+      </button>
       <div id="menu" className={open ? 'open' : ''}>
         <label>
           {t('language')}:
