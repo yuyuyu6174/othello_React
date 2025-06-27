@@ -35,11 +35,17 @@ function findEliminationMove(board: Board, color: 1 | 2) {
   return null;
 }
 
+function checkAbort(signal?: AbortSignal) {
+  if (signal?.aborted) throw new DOMException('aborted', 'AbortError');
+}
+
 export function cpuMove(
   board: Board,
   turn: 1 | 2,
-  level: number
+  level: number,
+  signal?: AbortSignal
 ): { x: number; y: number; flips: [number, number][] } | null {
+  checkAbort(signal);
   const base = AI_CONFIG[level] || AI_CONFIG[1];
   const config: any = {
     ...DEFAULT_AI_CONFIG,
@@ -64,15 +70,15 @@ export function cpuMove(
       ? getDynamicDepth(emptyCount, config.depthTable || [])
       : config.depth ?? DEFAULT_AI_CONFIG.depth ?? 2;
 
-    return getBestMoveMinimax(board, turn, depth, evalFunc, config);
+    return getBestMoveMinimax(board, turn, depth, evalFunc, config, signal);
   }
 
   if (config.type === 'iterative') {
-    return getBestMoveIterative(board, turn, config.timeLimit || 1000, evalFunc, config);
+    return getBestMoveIterative(board, turn, config.timeLimit || 1000, evalFunc, config, signal);
   }
 
   if (config.type === 'mcts') {
-    return getBestMoveMCTS(board, turn, config);
+    return getBestMoveMCTS(board, turn, config, signal);
   }
 
   return null;
@@ -92,8 +98,10 @@ function getBestMoveMinimax(
   turn: 1 | 2,
   depth: number,
   evalFunc: (b: Board) => number,
-  config: any
+  config: any,
+  signal?: AbortSignal
 ) {
+  checkAbort(signal);
   const moves = getAllValidMoves(turn, board);
   if (moves.length === 0) return null;
 
@@ -102,7 +110,8 @@ function getBestMoveMinimax(
 
   for (const move of moves) {
     const undo = applyMove(board, move, turn);
-    const score = minimax(board, 3 - turn as 1 | 2, depth - 1, -Infinity, Infinity, false, evalFunc, config);
+    checkAbort(signal);
+    const score = minimax(board, 3 - turn as 1 | 2, depth - 1, -Infinity, Infinity, false, evalFunc, config, signal);
     undoMove(board, undo);
     if (score > bestScore) {
       bestScore = score;
@@ -121,8 +130,10 @@ function minimax(
   beta: number,
   maximizing: boolean,
   evalFunc: (b: Board) => number,
-  config: any
+  config: any,
+  signal?: AbortSignal
 ): number {
+  checkAbort(signal);
   const key = hashBoard(board) + color + depth;
   if (transpositionTable.has(key)) return transpositionTable.get(key)!;
 
@@ -145,7 +156,8 @@ function minimax(
     let maxEval = -Infinity;
     for (const { move } of orderedMoves) {
       const undo = applyMove(board, move, color);
-      const evalScore = minimax(board, 3 - color as 1 | 2, depth - 1, alpha, beta, false, evalFunc, config);
+      checkAbort(signal);
+      const evalScore = minimax(board, 3 - color as 1 | 2, depth - 1, alpha, beta, false, evalFunc, config, signal);
       undoMove(board, undo);
       maxEval = Math.max(maxEval, evalScore);
       alpha = Math.max(alpha, evalScore);
@@ -157,7 +169,8 @@ function minimax(
     let minEval = Infinity;
     for (const { move } of orderedMoves) {
       const undo = applyMove(board, move, color);
-      const evalScore = minimax(board, 3 - color as 1 | 2, depth - 1, alpha, beta, true, evalFunc, config);
+      checkAbort(signal);
+      const evalScore = minimax(board, 3 - color as 1 | 2, depth - 1, alpha, beta, true, evalFunc, config, signal);
       undoMove(board, undo);
       minEval = Math.min(minEval, evalScore);
       beta = Math.min(beta, evalScore);
@@ -175,8 +188,10 @@ function getBestMoveIterative(
   turn: 1 | 2,
   timeLimit: number,
   evalFunc: (b: Board) => number,
-  config: any
+  config: any,
+  signal?: AbortSignal
 ) {
+  checkAbort(signal);
   const moves = getAllValidMoves(turn, board);
   let bestMove = null;
   let bestScore = -Infinity;
@@ -184,9 +199,11 @@ function getBestMoveIterative(
   let depth = 1;
 
   while (Date.now() - start < timeLimit) {
+    checkAbort(signal);
     for (const move of moves) {
+      checkAbort(signal);
       const undo = applyMove(board, move, turn);
-      const score = minimax(board, 3 - turn as 1 | 2, depth, -Infinity, Infinity, false, evalFunc, config);
+      const score = minimax(board, 3 - turn as 1 | 2, depth, -Infinity, Infinity, false, evalFunc, config, signal);
       undoMove(board, undo);
       if (score > bestScore) {
         bestScore = score;
@@ -201,7 +218,8 @@ function getBestMoveIterative(
 
 // -------------------- FULL SEARCH (ENDGAME SOLVER) --------------------
 
-function getBestMoveFullSearch(board: Board, color: 1 | 2, config: any) {
+function getBestMoveFullSearch(board: Board, color: 1 | 2, config: any, signal?: AbortSignal) {
+  checkAbort(signal);
   const moves = getAllValidMoves(color, board);
   if (moves.length === 0) return null;
 
@@ -218,8 +236,9 @@ function getBestMoveFullSearch(board: Board, color: 1 | 2, config: any) {
     .sort((a, b) => b.score - a.score);
 
   for (const { move } of ordered) {
+    checkAbort(signal);
     const undo = applyMove(board, move, color);
-    const evalScore = -fullSearch(board, 3 - color as 1 | 2, config, false, -Infinity, Infinity);
+    const evalScore = -fullSearch(board, 3 - color as 1 | 2, config, false, -Infinity, Infinity, signal);
     undoMove(board, undo);
     if (evalScore > bestEval) {
       bestEval = evalScore;
@@ -236,8 +255,10 @@ function fullSearch(
   config: any,
   _passed: boolean,
   alpha: number = -Infinity,
-  beta: number = Infinity
+  beta: number = Infinity,
+  signal?: AbortSignal
 ): number {
+  checkAbort(signal);
   const key = hashBoard(board) + color;
   if (endgameTranspositionTable.has(key)) return endgameTranspositionTable.get(key)!;
 
@@ -253,7 +274,7 @@ function fullSearch(
       endgameTranspositionTable.set(key, res);
       return res;
     } else {
-      const res = -fullSearch(board, 3 - color as 1 | 2, config, true, -beta, -alpha);
+      const res = -fullSearch(board, 3 - color as 1 | 2, config, true, -beta, -alpha, signal);
       endgameTranspositionTable.set(key, res);
       return res;
     }
@@ -271,7 +292,8 @@ function fullSearch(
   let best = -Infinity;
   for (const { move } of ordered) {
     const undo = applyMove(board, move, color);
-    const evalScore = -fullSearch(board, 3 - color as 1 | 2, config, false, -beta, -alpha);
+    checkAbort(signal);
+    const evalScore = -fullSearch(board, 3 - color as 1 | 2, config, false, -beta, -alpha, signal);
     undoMove(board, undo);
     best = Math.max(best, evalScore);
     alpha = Math.max(alpha, evalScore);
@@ -310,10 +332,12 @@ function selectChild(node: MCTSNode, c: number): MCTSNode {
   return bestChild;
 }
 
-function rollout(board: Board, color: 1 | 2, rootColor: 1 | 2): number {
+function rollout(board: Board, color: 1 | 2, rootColor: 1 | 2, signal?: AbortSignal): number {
+  checkAbort(signal);
   let currentBoard = board.slice();
   let currentColor = color;
   while (true) {
+    checkAbort(signal);
     const moves = getAllValidMoves(currentColor, currentBoard);
     if (moves.length === 0) {
       const opp = getAllValidMoves((3 - currentColor) as 1 | 2, currentBoard);
@@ -337,7 +361,7 @@ function rollout(board: Board, color: 1 | 2, rootColor: 1 | 2): number {
   }
 }
 
-function getBestMoveMCTS(board: Board, turn: 1 | 2, config: any) {
+function getBestMoveMCTS(board: Board, turn: 1 | 2, config: any, signal?: AbortSignal) {
   const timeLimit = config.timeLimit ?? 1000;
   const simulations = config.simulations ?? 1000;
   const c = config.explorationConstant ?? 1.4;
@@ -354,6 +378,7 @@ function getBestMoveMCTS(board: Board, turn: 1 | 2, config: any) {
   const start = Date.now();
   let iter = 0;
   while (Date.now() - start < timeLimit && iter < simulations) {
+    checkAbort(signal);
     let node = root;
 
     // Selection
@@ -381,7 +406,7 @@ function getBestMoveMCTS(board: Board, turn: 1 | 2, config: any) {
     }
 
     // Simulation
-    const result = rollout(node.board, node.color, turn);
+    const result = rollout(node.board, node.color, turn, signal);
 
     // Backpropagation
     let backNode: MCTSNode | undefined = node;

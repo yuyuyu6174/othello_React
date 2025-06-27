@@ -44,7 +44,7 @@ function App() {
     return b;
   };
 
-  const { calculateMove, reset } = useCpuWorker();
+  const { calculateMove, reset, abort } = useCpuWorker();
   const [mode, setMode] = useState<Mode>('title');
   // const [cpuLevel, setCpuLevel] = useState<number>(1);
   const [cpuLevel, setCpuLevel] = useState<keyof typeof AI_CONFIG>(1);
@@ -363,6 +363,7 @@ function App() {
       clearTimeout(cpuTimeoutRef.current);
       cpuTimeoutRef.current = null;
     }
+    abort();
     reset();
     setCpuThinking(false);
   };
@@ -373,6 +374,7 @@ function App() {
       clearTimeout(cpuTimeoutRef.current);
       cpuTimeoutRef.current = null;
     }
+    abort();
     setCpuThinking(false);
     setGameOver(true);
     setCurrentMatch(numMatches);
@@ -397,6 +399,7 @@ function App() {
     } else {
       setCurrentMatch(c => c + 1);
       setTimeout(() => {
+        abort();
         reset();
         setBoard(createInitialBoard());
         setTurn(1);

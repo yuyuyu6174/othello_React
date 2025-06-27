@@ -8,6 +8,10 @@ export type CpuRequest = {
   level: number;
 };
 
+type WorkerMessage =
+  | ({ type: 'start' } & CpuRequest)
+  | { type: 'abort' };
+
 export type CpuResponse = {
   x: number;
   y: number;
@@ -26,8 +30,16 @@ export function useCpuWorker() {
     return workerRef.current;
   };
 
+  const abort = () => {
+    if (workerRef.current) {
+      const msg: WorkerMessage = { type: 'abort' };
+      workerRef.current.postMessage(msg);
+    }
+  };
+
   const reset = () => {
     if (workerRef.current) {
+      abort();
       workerRef.current.terminate();
       workerRef.current = null;
     }
@@ -42,9 +54,10 @@ export function useCpuWorker() {
         worker.removeEventListener('message', handleMessage);
       };
       worker.addEventListener('message', handleMessage);
-      worker.postMessage(data);
+      const msg: WorkerMessage = { type: 'start', ...data };
+      worker.postMessage(msg);
     });
   };
 
-  return { calculateMove, reset };
+  return { calculateMove, reset, abort };
 }
