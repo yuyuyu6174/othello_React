@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSettings } from '../hooks/useSettings';
+import { useSettings, type ThemeMode } from '../hooks/useSettings';
 import '../style.css';
 
 const SettingsMenu = () => {
@@ -31,11 +31,11 @@ const SettingsMenu = () => {
         </label>
         <label>
           {t('darkMode')}:
-          <input
-            type="checkbox"
-            checked={theme === 'dark'}
-            onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          />
+          <select value={theme} onChange={e => setTheme(e.target.value as ThemeMode)}>
+            <option value="light">{t('off')}</option>
+            <option value="dark">{t('on')}</option>
+            <option value="system">{t('system')}</option>
+          </select>
         </label>
       </div>
     </>
